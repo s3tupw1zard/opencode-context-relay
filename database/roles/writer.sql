@@ -15,8 +15,6 @@ BEGIN
 END
 $$;
 
-ALTER ROLE context_bridge_writer PASSWORD :'writer_password';
-
 ALTER ROLE context_bridge_writer SET statement_timeout = '5s';
 
 REVOKE ALL ON SCHEMA context_bridge FROM PUBLIC;
