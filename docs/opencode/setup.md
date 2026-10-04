@@ -25,7 +25,7 @@ The default database/schema are expected to be `context_bridge`. Keep PostgreSQL
 Create:
 
 ```text
-~/.config/opencode-context-bridge/config.json
+~/.config/opencode-context-relay/config.json
 ```
 
 Example:
@@ -43,10 +43,10 @@ Example:
 Protect it because it contains a database credential:
 
 ```bash
-chmod 600 ~/.config/opencode-context-bridge/config.json
+chmod 600 ~/.config/opencode-context-relay/config.json
 ```
 
-`$XDG_CONFIG_HOME/opencode-context-bridge/config.json` is used when `XDG_CONFIG_HOME` is set. `BRIDGE_CONFIG_PATH` can point to another global config file.
+`$XDG_CONFIG_HOME/opencode-context-relay/config.json` is used when `XDG_CONFIG_HOME` is set. `BRIDGE_CONFIG_PATH` can point to another global config file.
 
 Environment equivalents:
 
@@ -57,7 +57,7 @@ export BRIDGE_HISTORY_ENABLED='true'
 export BRIDGE_ACTIVITY_HISTORY_ENABLED='true'
 export BRIDGE_LOG_LEVEL='info'
 # Optional:
-# export BRIDGE_LOG_FILE='/var/log/opencode-context-bridge/opencode-context-bridge.log'
+# export BRIDGE_LOG_FILE='/var/log/opencode-context-relay/opencode-context-relay.log'
 ```
 
 Database connection settings are intentionally ignored in project-local config so credentials cannot accidentally be committed with a repository.
@@ -94,13 +94,13 @@ Database connection settings and `logFile` skip the project-config layer.
 The plugin writes structured diagnostics to:
 
 ```text
-$XDG_STATE_HOME/opencode-context-bridge/opencode-context-bridge.log
+$XDG_STATE_HOME/opencode-context-relay/opencode-context-relay.log
 ```
 
 or, when `XDG_STATE_HOME` is unset:
 
 ```text
-~/.local/state/opencode-context-bridge/opencode-context-bridge.log
+~/.local/state/opencode-context-relay/opencode-context-relay.log
 ```
 
 Supported levels are `error`, `warn`, `info`, and `debug`; `info` is the default. Use `debug` temporarily while diagnosing event/session publishing.
@@ -118,7 +118,7 @@ At startup the plugin records whether PostgreSQL is configured, whether the conn
 Useful checks:
 
 ```bash
-tail -F ~/.local/state/opencode-context-bridge/opencode-context-bridge.log
+tail -F ~/.local/state/opencode-context-relay/opencode-context-relay.log
 ```
 
 ```sql
@@ -134,7 +134,7 @@ Plain `\dt` may show no relations when `context_bridge` is not on the current `s
 {
   "$schema": "https://opencode.ai/config.json",
   "plugins": [
-    "github:s3tupw1zard/opencode-context-bridge"
+    "opencode-context-relay"
   ]
 }
 ```
