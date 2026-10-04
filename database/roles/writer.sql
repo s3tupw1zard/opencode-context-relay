@@ -62,6 +62,12 @@ BEGIN
 END
 $$;
 
-REVOKE ALL ON context_bridge.schema_migrations FROM context_bridge_writer;
+DO $
+BEGIN
+  IF to_regclass('context_bridge.schema_migrations') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON context_bridge.schema_migrations FROM context_bridge_writer';
+  END IF;
+END
+$;
 
 COMMIT;
