@@ -1,7 +1,12 @@
-name: Checks
-on: [push, pull_request]
+name: ChatGPT bridge checks
+
+on:
+  push:
+  pull_request:
+
 permissions:
   contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -10,18 +15,24 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: ci-only-admin
-        ports: ["5432:5432"]
+          POSTGRES_DB: context_bridge
+        ports:
+          - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U postgres -d context_bridge"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      TEST_DATABASE_URL: postgresql://postgres:ci-only-admin@localhost:5432/postgres
+      TEST_DATABASE_URL: postgresql://postgres:ci-only-admin@localhost:5432/context_bridge
+    defaults:
+      run:
+        working-directory: services/chatgpt-bridge
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: services/chatgpt-bridge/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
