@@ -26,15 +26,15 @@ curl -fsSL \
   -o .env
 ```
 
-Generate independent secrets:
+The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.7` in `.env` before pulling the images.
+
+Generate a unique password for each database password variable. Run `openssl rand -hex 32` once per variable and paste each generated value into `.env`:
 
 ```sh
 openssl rand -hex 32
-openssl rand -hex 32
-openssl rand -hex 32
 ```
 
-Use them for:
+Use separate generated values for:
 
 ```dotenv
 POSTGRES_ADMIN_PASSWORD=...
@@ -47,23 +47,29 @@ Set `MCP_PUBLIC_URL`, `OAUTH_ISSUER` and your OAuth subject settings as well.
 ## 2. Start the prebuilt stack
 
 ```sh
-docker compose --env-file .env -f docker-compose.yaml pull
-docker compose --env-file .env -f docker-compose.yaml up -d
+docker compose pull
+docker compose up -d
 ```
 
 The default stack pulls:
 
 ```text
 postgres:17
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
 ```
 
 The migrator image contains the exact SQL migrations and role definitions for its release. It applies only missing migrations, records SHA-256 checksums in PostgreSQL and exits.
 
 No repository clone and no runtime download of migration SQL from a moving branch are required.
 
-To pin project images to an exact release:
+For development builds, set:
+
+```dotenv
+CONTEXT_RELAY_VERSION=dev
+```
+
+To pin a specific development release, use an exact version such as:
 
 ```dotenv
 CONTEXT_RELAY_VERSION=2026.1.0-dev.7
