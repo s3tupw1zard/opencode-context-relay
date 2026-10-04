@@ -38,7 +38,7 @@ The old repositories were migrated into this monorepo. Their original source sna
 ## Current development version
 
 ```text
-2026.1.0-dev.6
+2026.1.0-dev.7
 ```
 
 The npm package, ChatGPT bridge service and database schema are intended to move on one release train.
