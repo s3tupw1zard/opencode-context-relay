@@ -23,8 +23,13 @@ services:
       retries: 20
 
   migrate:
-    image: postgres:17
+    image: ghcr.io/s3tupw1zard/opencode-context-relay-migrator:${CONTEXT_RELAY_VERSION:-latest}
+    pull_policy: always
     restart: "no"
+
+    # Development alternative: build the migrator from a local clone.
+    # build:
+    #   context: ../database
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,13 +41,18 @@ services:
       PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:?set POSTGRES_ADMIN_PASSWORD}
       CONTEXT_BRIDGE_WRITER_PASSWORD: ${CONTEXT_BRIDGE_WRITER_PASSWORD:?set CONTEXT_BRIDGE_WRITER_PASSWORD}
       CONTEXT_BRIDGE_READER_PASSWORD: ${CONTEXT_BRIDGE_READER_PASSWORD:?set CONTEXT_BRIDGE_READER_PASSWORD}
-    volumes:
-      - ../database:/database:ro
-    entrypoint: ["/bin/sh", "/database/migrate.sh"]
+    # Development override: use migration files from a local clone.
+    # volumes:
+    #   - ../database:/database:ro
 
   chatgpt-bridge:
-    build:
-      context: ../services/chatgpt-bridge
+    image: ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:${CONTEXT_RELAY_VERSION:-latest}
+    pull_policy: always
+
+    # Development alternative: build the service from a local clone.
+    # build:
+    #   context: ../services/chatgpt-bridge
+
     restart: unless-stopped
     depends_on:
       migrate:
