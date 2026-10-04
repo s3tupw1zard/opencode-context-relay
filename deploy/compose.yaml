@@ -10,7 +10,12 @@ services:
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
+      # Recommended default: Docker-managed named volume.
       - postgres_data:/var/lib/postgresql/data
+
+      # Alternative: bind mount for easier host-level inspection/migration.
+      # Comment out the named volume above before enabling this line.
+      # - ./postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-context_bridge}"]
       interval: 5s
