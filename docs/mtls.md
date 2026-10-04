@@ -83,7 +83,54 @@ For an exact development release, set `RELEASE_REF` to its Git tag instead, for 
 RELEASE_REF=v2026.1.0-dev.7
 ```
 
-The snippet must be loaded inside nginx's `http {}` context. If your nginx package does not include `/etc/nginx/conf.d/*.conf` there, add the file from the appropriate `http {}` configuration instead.
+The snippet must be loaded inside nginx's `http {}` context.
+
+### Verify that `conf.d` is included
+
+On Debian/Ubuntu this is normally already configured in `/etc/nginx/nginx.conf`. Check it with:
+
+```sh
+grep -n 'include /etc/nginx/conf.d/\*.conf;' /etc/nginx/nginx.conf
+```
+
+If you get a matching line, nothing else is required. nginx will automatically load:
+
+```text
+/etc/nginx/conf.d/context-relay-mtls.conf
+```
+
+through the wildcard include.
+
+A typical `http {}` section contains both the global snippets and enabled sites:
+
+```nginx
+http {
+    # ...
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+```
+
+If the `conf.d` include is missing, edit the main nginx configuration:
+
+```sh
+sudo nano /etc/nginx/nginx.conf
+```
+
+and add this line **inside the existing `http {}` block**, not inside a `server {}` block:
+
+```nginx
+include /etc/nginx/conf.d/*.conf;
+```
+
+Then verify that nginx actually loads the snippet:
+
+```sh
+sudo nginx -T 2>&1 | grep -F '/etc/nginx/conf.d/context-relay-mtls.conf'
+```
+
+You should see the file referenced in nginx's expanded configuration. Do not add a second include if `/etc/nginx/conf.d/*.conf` is already present.
 
 The snippet allows initial unauthenticated discovery/OAuth requests without a client certificate. Once an `Authorization: Bearer ...` header is present, nginx requires `$ssl_client_verify` to be `SUCCESS`.
 
