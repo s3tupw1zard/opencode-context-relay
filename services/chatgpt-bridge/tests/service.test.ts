@@ -200,7 +200,7 @@ test("storage failure health contains no exception text", async () => {
     server: "reachable",
     storage: "unavailable",
     schema: "unverified",
-    version: "2026.1.0-dev.6",
+    version: "2026.1.0-dev.7",
     context_model: 2,
   });
 });
