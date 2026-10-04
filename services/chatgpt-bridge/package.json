@@ -1,6 +1,6 @@
 {
   "name": "@opencode-context-relay/chatgpt-bridge",
-  "version": "2026.1.0-dev.6",
+  "version": "2026.1.0-dev.7",
   "private": true,
   "description": "WIP read-only ChatGPT MCP bridge for OpenCode Context Relay.",
   "type": "module",
