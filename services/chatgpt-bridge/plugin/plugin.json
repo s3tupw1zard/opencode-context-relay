@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "context-bridge-chatgpt",
+  "version": "0.2.0",
+  "description": "Read compact project and session context from your private Coding Agent Context Bridge.",
+  "author": {
+    "name": "s3tupw1zard"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Context Bridge",
+        "shortDescription": "Coding project context",
+        "longDescription": "Read current tasks, structured history, decisions, diagnostics, validations and safe Git metadata across coding projects and sessions. All tools are read-only.",
+        "developerName": "s3tupw1zard",
+        "category": "Productivity",
+        "defaultPrompt": "Was machen meine Coding-Projekte gerade?"
+      }
+    }
+  }
+}
