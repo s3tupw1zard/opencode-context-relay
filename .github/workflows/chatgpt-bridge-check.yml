@@ -52,3 +52,15 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm pack --dry-run
+
+      - name: Validate Compose configuration
+        working-directory: .
+        run: docker compose --env-file .env.example -f deploy/compose.yaml config >/dev/null
+
+      - name: Build ChatGPT container image
+        working-directory: .
+        run: docker build -t opencode-context-relay-chatgpt:test services/chatgpt-bridge
+
+      - name: Build migrator container image
+        working-directory: .
+        run: docker build -t opencode-context-relay-migrator:test database
