@@ -39,7 +39,7 @@ opencode plugin update opencode-context-relay@latest
 
 OpenCode v2 accepts npm versions, tags and ranges for package plugins.
 
-## Publish manually
+## Publish npm packages manually
 
 Authenticate once:
 
@@ -47,13 +47,31 @@ Authenticate once:
 npm login
 ```
 
-Then from the package directory:
+Publish the OpenCode plugin:
 
 ```sh
 cd packages/opencode-context-relay
 npm run check
 npm pack --dry-run
 npm publish --access public --tag latest
+```
+
+Publish the standalone ChatGPT bridge:
+
+```sh
+cd ../../services/chatgpt-bridge
+npm run typecheck
+npm run lint
+npm test
+npm pack --dry-run
+npm publish --access public --tag latest
+```
+
+The published npm packages are:
+
+```text
+opencode-context-relay
+opencode-context-relay-chatgpt
 ```
 
 The explicit `--tag latest` is intentional. Do not rely on npm deciding a different prerelease channel.
@@ -64,6 +82,7 @@ Verify:
 npm view opencode-context-relay version
 npm view opencode-context-relay dist-tags
 npm view opencode-context-relay versions --json
+npm view opencode-context-relay-chatgpt dist-tags
 ```
 
 For the current development release, `latest` should resolve to:
@@ -81,3 +100,26 @@ For the current development release, `latest` should resolve to:
 5. Publish the npm package with `--tag latest`.
 6. Create the matching Git tag/release after the commit is final.
 7. Keep the WIP warning until the project has enough real-world testing to claim stability.
+
+## Container images
+
+Pushing a version tag such as:
+
+```sh
+git tag v2026.1.0-dev.7
+git push origin v2026.1.0-dev.7
+```
+
+triggers `.github/workflows/release-images.yml` and publishes:
+
+```text
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:2026.1.0-dev.7
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
+
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:2026.1.0-dev.7
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
+```
+
+The migrator image contains the exact SQL migrations and role definitions from that tag. It never downloads migration SQL from a moving branch at runtime.
+
+After the first GHCR publication, ensure both packages are public in GitHub Packages if anonymous Docker pulls are desired.
