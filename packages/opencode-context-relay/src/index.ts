@@ -156,7 +156,7 @@ function executionKey(event: unknown, sessionID: string, tool: string): string {
 
 const plugin = {
   id: PLUGIN_ID,
-  async setup(ctx) {
+  async setup(ctx: RelayPluginContext) {
     const options = (ctx.options ?? {}) as Record<string, unknown>
     const startupConfig = loadConfig(options, ctx.location.directory)
     const logger = createLogger(startupConfig)
@@ -248,7 +248,7 @@ const plugin = {
       })
     }
 
-    await ctx.tool.transform((editor) => {
+    await ctx.tool.transform((editor: RelayToolEditor) => {
       editor.namespace({
         name: "bridge",
         description: "Publish only structured, non-sensitive semantic work context for ChatGPT.",
@@ -323,7 +323,7 @@ const plugin = {
           },
           required: ["status", "current_task", "approach_summary", "recent_progress", "next_step"],
         },
-        execute: async (input, toolContext) => {
+        execute: async (input: unknown, toolContext: { sessionID: string }) => {
           const scope = await scopeForSession(toolContext.sessionID)
           const semantic = sanitizeSemanticContext(input as SemanticContextInput)
           const git = await readGitState(scope.directory)
@@ -396,7 +396,7 @@ const plugin = {
     })
 
 
-    await ctx.tool.hook("execute.before", async (event) => {
+    await ctx.tool.hook("execute.before", async (event: unknown) => {
       const sessionID = sessionIDOf(event)
       if (!sessionID) return
 
@@ -424,7 +424,7 @@ const plugin = {
       await runtimePublish(sessionID, "working").catch((error) => logger.warn("background bridge publish failed", { error }))
     })
 
-    await ctx.tool.hook("execute.after", async (event) => {
+    await ctx.tool.hook("execute.after", async (event: unknown) => {
       const sessionID = sessionIDOf(event)
       if (!sessionID) return
       const scope = await scopeForSession(sessionID)
