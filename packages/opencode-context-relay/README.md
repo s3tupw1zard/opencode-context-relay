@@ -11,7 +11,7 @@ It does **not** publish raw source code, full diffs, prompts, terminal transcrip
 After publication:
 
 ```sh
-opencode plugin opencode-context-relay --global
+opencode plugin add opencode-context-relay@latest
 ```
 
 The repository intentionally uses npm's `latest` tag for the newest published build, including development prereleases during the WIP phase.
