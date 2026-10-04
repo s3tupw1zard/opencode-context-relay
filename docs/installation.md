@@ -55,8 +55,8 @@ The default stack pulls:
 
 ```text
 postgres:17
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
 ```
 
 The migrator image contains the exact SQL migrations and role definitions for its release. It applies only missing migrations, records SHA-256 checksums in PostgreSQL and exits.
