@@ -125,6 +125,54 @@ sh ./database/migrate.sh
 
 Prefer a private network. [Deployment topologies](deployment-topologies.md) includes a Tailscale example.
 
+## Optional PostgreSQL bind mount
+
+The default Compose file uses a Docker-managed named volume:
+
+```yaml
+volumes:
+  - postgres_data:/var/lib/postgresql/data
+```
+
+If you prefer the database files to live visibly next to the Compose file, comment out that line and enable the included bind-mount example:
+
+```yaml
+volumes:
+  # - postgres_data:/var/lib/postgresql/data
+  - ./postgres_data:/var/lib/postgresql/data
+```
+
+Because the Compose file lives in `deploy/`, that path resolves to:
+
+```text
+deploy/postgres_data/
+```
+
+Create the directory before the first start:
+
+```sh
+mkdir -p deploy/postgres_data
+```
+
+If PostgreSQL reports permission errors, let the same PostgreSQL image assign the directory to its internal `postgres` user:
+
+```sh
+docker run --rm --user 0:0 \
+  -v "$PWD/deploy/postgres_data:/var/lib/postgresql/data" \
+  postgres:17 \
+  sh -c 'chown -R postgres:postgres /var/lib/postgresql/data'
+```
+
+Then start the stack normally:
+
+```sh
+docker compose --env-file .env -f deploy/compose.yaml up -d --build
+```
+
+Do not enable both the named-volume and bind-mount entries for the same container path at the same time.
+
+A bind mount can make manual host migration more convenient, but logical `pg_dump` backups are still recommended for moving PostgreSQL data between systems or versions.
+
 ## Backup before upgrades
 
 ```sh
