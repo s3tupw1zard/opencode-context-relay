@@ -63,7 +63,7 @@ If you already have a clone of this repository, `scripts/update-openai-mtls-ca.s
 
 ## 3. Install the global nginx mTLS snippets
 
-The repository contains the nginx `map` directives and debug log format used by the example site.
+The repository contains the nginx `map` directives and debug log format used by the example site in [`deploy/nginx/http-mtls-maps.conf`](../deploy/nginx/http-mtls-maps.conf).
 
 On Debian/Ubuntu, `/etc/nginx/conf.d/*.conf` is normally included from nginx's global `http {}` block, so the snippet can be downloaded directly there:
 
@@ -89,7 +89,7 @@ The snippet allows initial unauthenticated discovery/OAuth requests without a cl
 
 ## 4. Download the nginx site boilerplate
 
-The repository also contains a complete nginx site boilerplate for the Context Relay bridge.
+The repository also contains a complete nginx site boilerplate for the Context Relay bridge in [`deploy/nginx/context-bridge.conf`](../deploy/nginx/context-bridge.conf).
 
 For the normal Debian/Ubuntu `sites-available` / `sites-enabled` layout:
 
@@ -142,7 +142,7 @@ listen [::]:443 ssl proxy_protocol;
 real_ip_header proxy_protocol;
 ```
 
-This is important because the PROXY protocol expectation applies to the shared nginx listening socket. If several HTTPS sites share the same `:443` listener, configure them consistently.
+This is important because the PROXY protocol expectation applies to the shared nginx listening socket. The L4 proxy must actually send PROXY protocol to nginx; otherwise nginx will typically log errors such as `broken header while reading PROXY protocol`. If several HTTPS sites share the same `:443` listener, configure them consistently.
 
 For example, another nginx HTTPS site behind the same L4 proxy should also use:
 
