@@ -62,6 +62,12 @@ const numberColumns = new Set([
   "failed",
   "skipped",
 ]);
+function validateSchemaName(value: string) {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value))
+    throw new Error("Invalid PostgreSQL schema name");
+  return value;
+}
+
 export function expectedType(column: string) {
   return column === "id"
     ? 20
@@ -129,8 +135,10 @@ export class PostgresStorage implements Storage {
     url: string,
     timeout = 5000,
     private rowCap = 1000,
+    private schema = "context_bridge",
     pool?: SqlPool,
   ) {
+    this.schema = validateSchemaName(this.schema);
     this.pool =
       pool ??
       new pg.Pool({
@@ -142,6 +150,10 @@ export class PostgresStorage implements Storage {
       });
     this.pool.on("error", () => {});
   }
+  private relation(table: string) {
+    return `"${this.schema}"."${table}"`;
+  }
+
   private async query(sql: string, values: unknown[] = []) {
     try {
       return await this.pool.query(sql, values);
@@ -163,7 +175,7 @@ export class PostgresStorage implements Storage {
       ] as const) {
         const rows = (
           await client.query(
-            `SELECT ${projection(table)} FROM public.${table} ORDER BY project_id,session_id LIMIT $1`,
+            `SELECT ${projection(table)} FROM ${this.relation(table)} ORDER BY project_id,session_id LIMIT $1`,
             [this.rowCap + 1],
           )
         ).rows;
@@ -188,7 +200,7 @@ export class PostgresStorage implements Storage {
     try {
       for (const table of Object.keys(tables) as Table[]) {
         const result = await this.query(
-          `SELECT ${healthColumns(table).join(",")} FROM public.${table} LIMIT 0`,
+          `SELECT ${healthColumns(table).join(",")} FROM ${this.relation(table)} LIMIT 0`,
         );
         if (
           result.fields.length !== healthColumns(table).length ||
@@ -240,7 +252,7 @@ export class PostgresStorage implements Storage {
       eventSchema,
       (
         await this.query(
-          `SELECT ${projection("work_events")} FROM public.work_events WHERE ${where.join(" AND ")} ORDER BY id DESC LIMIT $${values.length}`,
+          `SELECT ${projection("work_events")} FROM ${this.relation("work_events")} WHERE ${where.join(" AND ")} ORDER BY id DESC LIMIT $${values.length}`,
           values,
         )
       ).rows,
@@ -299,7 +311,7 @@ export class PostgresStorage implements Storage {
       schema,
       (
         await this.query(
-          `SELECT ${projection(table)} FROM public.${table} WHERE ${where.join(" AND ")} ORDER BY ${date} DESC,id DESC LIMIT $${values.length}`,
+          `SELECT ${projection(table)} FROM ${this.relation(table)} WHERE ${where.join(" AND ")} ORDER BY ${date} DESC,id DESC LIMIT $${values.length}`,
           values,
         )
       ).rows,
@@ -386,7 +398,7 @@ export class PostgresStorage implements Storage {
       cursorWhere = `WHERE (g.last_seen_at,g.latest_id)<($${values.length - 1}::timestamptz,$${values.length}::bigint)`;
     }
     values.push(q.limit + 1);
-    const sql = `WITH grouped AS (SELECT project_id,session_id,diagnostic_key,count(*)::int AS occurrence_count,min(created_at) AS first_seen_at,max(created_at) AS last_seen_at,(array_agg(id ORDER BY created_at DESC,id DESC))[1] AS latest_id FROM public.diagnostic_events WHERE ${where.join(" AND ")} GROUP BY project_id,session_id,diagnostic_key) SELECT ${projection("diagnostic_events", "d")},g.occurrence_count,to_char(g.first_seen_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS first_seen_at,to_char(g.last_seen_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS last_seen_at FROM grouped g JOIN public.diagnostic_events d ON d.id=g.latest_id ${cursorWhere} ORDER BY g.last_seen_at DESC,g.latest_id DESC LIMIT $${values.length}`;
+    const sql = `WITH grouped AS (SELECT project_id,session_id,diagnostic_key,count(*)::int AS occurrence_count,min(created_at) AS first_seen_at,max(created_at) AS last_seen_at,(array_agg(id ORDER BY created_at DESC,id DESC))[1] AS latest_id FROM ${this.relation("diagnostic_events")} WHERE ${where.join(" AND ")} GROUP BY project_id,session_id,diagnostic_key) SELECT ${projection("diagnostic_events", "d")},g.occurrence_count,to_char(g.first_seen_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS first_seen_at,to_char(g.last_seen_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS last_seen_at FROM grouped g JOIN ${this.relation("diagnostic_events")} d ON d.id=g.latest_id ${cursorWhere} ORDER BY g.last_seen_at DESC,g.latest_id DESC LIMIT $${values.length}`;
     const rows = parseRows(
         diagnosticGroupSchema,
         (await this.query(sql, values)).rows,
