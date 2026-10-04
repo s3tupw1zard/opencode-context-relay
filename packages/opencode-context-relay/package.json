@@ -1,6 +1,6 @@
 {
   "name": "opencode-context-relay",
-  "version": "2026.1.0-dev.6",
+  "version": "2026.1.0-dev.7",
   "description": "WIP OpenCode v2 context relay for safe structured PostgreSQL state consumed by ChatGPT.",
   "type": "module",
   "main": "./src/index.ts",
