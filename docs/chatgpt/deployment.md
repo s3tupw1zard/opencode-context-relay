@@ -66,12 +66,12 @@ and communicate stale summaries. Exact code/diffs use the separate GitHub connec
 Voice tool support must be verified in the actual chosen ChatGPT voice surface;
 this server alone cannot guarantee host-side voice tool availability.
 
-## Pocket ID and NetBird
+## Pocket ID and private networking
 
-Use a separate MCP host, for example `context.s3tupw1zard.dev`, rather than Supabase's infrastructure host. If Caddy and MCP share a host, proxy to `127.0.0.1:8787`. If separate, proxy to the MCP host's private NetBird IP and bind MCP only to the private interface; firewall/NetBird policy must allow just the edge proxy to port 8787. Keep the public Host header. No path stripping, OAuth interception or response buffering is needed.
+Use a separate MCP host, for example `context.example.com`, rather than Supabase's infrastructure host. If Caddy and MCP share a host, proxy to `127.0.0.1:8787`. If separate, proxy to the MCP host's private Tailscale IP and bind MCP only to the private interface; firewall/Tailscale policy must allow just the edge proxy to port 8787. Keep the public Host header. No path stripping, OAuth interception or response buffering is needed.
 
 ```caddyfile
-context.s3tupw1zard.dev {
+context.example.com {
     reverse_proxy 127.0.0.1:8787
 }
 ```
