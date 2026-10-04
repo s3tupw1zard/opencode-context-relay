@@ -15,7 +15,7 @@
 ```sh
 git clone https://github.com/s3tupw1zard/opencode-context-relay.git
 cd opencode-context-relay
-./scripts/generate-env.sh
+sh ./scripts/generate-env.sh
 ```
 
 Edit `.env` and set at least:
@@ -83,7 +83,7 @@ The ChatGPT bridge never uses this writer credential. It receives only `context_
 Install the OpenAI CA bundle:
 
 ```sh
-sudo ./scripts/update-openai-mtls-ca.sh
+sudo sh ./scripts/update-openai-mtls-ca.sh
 ```
 
 Then use:
@@ -120,7 +120,7 @@ export PGPASSWORD='admin-password'
 export CONTEXT_BRIDGE_WRITER_PASSWORD='writer-password'
 export CONTEXT_BRIDGE_READER_PASSWORD='reader-password'
 
-./database/migrate.sh
+sh ./database/migrate.sh
 ```
 
 Prefer a private network. [Deployment topologies](deployment-topologies.md) includes a Tailscale example.
@@ -128,13 +128,13 @@ Prefer a private network. [Deployment topologies](deployment-topologies.md) incl
 ## Backup before upgrades
 
 ```sh
-./scripts/backup-postgres.sh
+sh ./scripts/backup-postgres.sh
 ```
 
 Restore with:
 
 ```sh
-./scripts/restore-postgres.sh path/to/context_bridge.dump
+sh ./scripts/restore-postgres.sh path/to/context_bridge.dump
 ```
 
 Named Docker volumes are the default, but logical PostgreSQL dumps keep host migrations straightforward.
