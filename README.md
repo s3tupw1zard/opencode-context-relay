@@ -102,7 +102,7 @@ Set `CONTEXT_RELAY_VERSION=2026.1.0-dev.7` in `.env` if you want to pin the two 
 ### 3. Install the OpenCode plugin
 
 ```sh
-opencode plugin add opencode-context-relay@latest
+opencode plugin add opencode-context-relay@dev
 ```
 
 Provide the OpenCode process with the writer connection:
@@ -206,7 +206,7 @@ This keeps moving the stack between hosts straightforward without depending on P
 - [Installation](docs/installation.md)
 - [OpenAI-managed mTLS](docs/mtls.md)
 - [Deployment topologies](docs/deployment-topologies.md)
-- [Releasing and npm `latest` policy](docs/releasing.md)
+- [Releasing and npm channel policy](docs/releasing.md)
 - [OpenCode architecture notes](docs/opencode/architecture.md)
 - [ChatGPT bridge architecture](docs/chatgpt/architecture.md)
 - [ChatGPT bridge security model](docs/chatgpt/security.md)
