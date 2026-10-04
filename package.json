@@ -1,6 +1,6 @@
 {
   "name": "opencode-context-relay-monorepo",
-  "version": "2026.1.0-dev.6",
+  "version": "2026.1.0-dev.7",
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
