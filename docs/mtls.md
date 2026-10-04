@@ -138,11 +138,9 @@ The snippet allows initial unauthenticated discovery/OAuth requests without a cl
 
 The repository also contains a complete nginx site boilerplate for the Context Relay bridge in [`deploy/nginx/context-bridge.conf`](../deploy/nginx/context-bridge.conf).
 
-For the normal Debian/Ubuntu `sites-available` / `sites-enabled` layout:
+For the normal Debian/Ubuntu `sites-available` / `sites-enabled` layout, those directories are created by the nginx package:
 
 ```sh
-sudo install -d -m 0755 /etc/nginx/sites-available /etc/nginx/sites-enabled
-
 RELEASE_REF=main
 
 sudo curl -fsSL \
