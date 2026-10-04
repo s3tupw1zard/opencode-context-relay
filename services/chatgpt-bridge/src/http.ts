@@ -6,12 +6,15 @@ import {
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { ContextService } from "./domain/service.js";
 import { createMcp } from "./mcp/server.js";
+import { verifyOpenAiProxyMtls } from "./mtls.js";
 export function httpServer(options: {
   service: ContextService;
   publicUrl: string;
   issuer?: string;
   authenticate: (header: string | undefined) => Promise<boolean>;
   secrets?: string[];
+  trustProxyMtls?: boolean;
+  expectedOpenAiSan?: string;
 }) {
   const publicUrl = new URL(options.publicUrl);
   const json = (res: ServerResponse, status: number, value: unknown) => {
@@ -63,6 +66,18 @@ export function httpServer(options: {
         }
         if (req.headers.origin && req.headers.origin !== publicUrl.origin) {
           json(res, 403, { error: "origin_rejected" });
+          return;
+        }
+        const hasBearer = req.headers.authorization?.startsWith("Bearer ") ?? false;
+        if (
+          hasBearer &&
+          options.trustProxyMtls &&
+          !verifyOpenAiProxyMtls(
+            req.headers,
+            options.expectedOpenAiSan ?? "mtls.prod.connectors.openai.com",
+          )
+        ) {
+          json(res, 403, { error: "mtls_required" });
           return;
         }
         if (!(await options.authenticate(req.headers.authorization))) {
