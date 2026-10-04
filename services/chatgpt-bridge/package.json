@@ -1,8 +1,15 @@
 {
-  "name": "context-bridge-chatgpt",
-  "version": "0.2.0",
+  "name": "@opencode-context-relay/chatgpt-bridge",
+  "version": "2026.1.0-dev.6",
   "private": true,
+  "description": "WIP read-only ChatGPT MCP bridge for OpenCode Context Relay.",
   "type": "module",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s3tupw1zard/opencode-context-relay.git",
+    "directory": "services/chatgpt-bridge"
+  },
   "engines": {
     "node": ">=22"
   },
