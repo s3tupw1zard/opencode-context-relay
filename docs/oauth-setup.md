@@ -10,14 +10,9 @@ See [OpenAI-managed mTLS](mtls.md) first if the public MCP edge is not configure
 
 Create a client for ChatGPT in your identity provider.
 
-Use an authorization-code flow with PKCE and allow refresh tokens. The client should have access to:
+Use an authorization-code flow with PKCE and allow refresh tokens. ChatGPT requests `context.read` for Context Relay access and `offline_access` for refresh-token support.
 
-```text
-context.read
-offline_access
-```
-
-The relay itself requires the access token to contain the `context.read` scope and an audience matching the configured `MCP_PUBLIC_URL`.
+The relay itself requires the access token to contain the `context.read` scope and an audience matching the configured `MCP_PUBLIC_URL`. Some identity providers require additional API/resource configuration before they will issue that combination; see [Additional provider setup](#additional-provider-setup).
 
 ChatGPT shows the callback URL while creating the MCP connection. Copy that exact callback URL into the identity provider's allowed redirect/callback URLs.
 
@@ -123,7 +118,25 @@ Enter these values in ChatGPT:
 
 The Keycloak paths above follow Keycloak's documented OIDC endpoints. Registration behavior has not yet been validated for this project, so this guide currently uses a manually created OAuth client and leaves the registration URL empty.
 
-## 5. Resource and OIDC settings
+## 5. Additional provider setup
+
+Some identity providers need more than the OAuth/OIDC client and endpoint configuration above.
+
+### Pocket ID
+
+Pocket ID requires the MCP endpoint to be registered as an API resource, with `context.read` defined as an API permission and granted to the ChatGPT OIDC client as user-delegated access.
+
+Follow [Pocket ID API and permission setup](oauth/pocket-id.md).
+
+This is required so Pocket ID can issue an access token whose audience identifies the MCP resource and whose permissions include `context.read`.
+
+### authentik and Keycloak
+
+No additional Context Relay-specific setup is documented here yet beyond the OAuth/OIDC client configuration above.
+
+As provider-specific requirements are validated through testing and user reports, they can be added as separate guides under `docs/oauth/` and linked from this section.
+
+## 6. Resource and OIDC settings
 
 The **Resource** field is normally filled automatically from the MCP server URL. Leave it at:
 
@@ -144,7 +157,7 @@ offline_access
 
 Do not add `openid`, `profile`, `email`, or other scopes to this ChatGPT field. For the currently tested Context Relay setup, advertising additional OIDC scopes here can make ChatGPT request scopes that the relay/provider combination is not configured to accept.
 
-## 6. Custom OAuth client
+## 7. Custom OAuth client
 
 Choose the **Custom OAuth client** registration method.
 
@@ -159,7 +172,7 @@ Use the values from the OAuth/OIDC client you created in the identity provider:
 
 The callback URL shown by ChatGPT is authoritative. Do not replace it with a manually constructed callback URL.
 
-## 7. Finish the connection
+## 8. Finish the connection
 
 After the fields are filled in:
 
