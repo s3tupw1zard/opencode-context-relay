@@ -1,0 +1,7 @@
+{
+  "repository": "s3tupw1zard/opencode-context-bridge",
+  "commit": "d8424848754bf1c5d1e7ed07d94c571e3652431a",
+  "path": "supabase/schema.sql",
+  "sha256": "63f637a16bdd9b6c0e444e8c7c5701b107793847268d1aabc318d49b6277252d",
+  "note": "Unmodified pinned producer schema; fresh setup only. Existing databases use producer migration at same commit."
+}

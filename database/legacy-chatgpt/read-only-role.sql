@@ -1,0 +1,56 @@
+-- Manual setup only; canonical producer schema must exist first.
+BEGIN;
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='context_bridge_reader') THEN CREATE ROLE context_bridge_reader LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS; END IF; END $$;
+GRANT CONNECT ON DATABASE postgres TO context_bridge_reader;
+GRANT USAGE ON SCHEMA public TO context_bridge_reader;
+REVOKE ALL ON public.agent_state FROM context_bridge_reader;
+GRANT SELECT (project_id,project_label,session_id,repository,branch,head_commit,git_dirty,changed_files,git_stats,status,updated_at,goal,current_task,reason,approach_summary,important_details,recent_progress,decisions,decision_details,diagnostics,checks,current_problem,problem_severity,next_step,rolling_summary) ON public.agent_state TO context_bridge_reader;
+ALTER TABLE public.agent_state ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.agent_state;
+CREATE POLICY context_bridge_reader_select ON public.agent_state FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.agent_runtime FROM context_bridge_reader;
+GRANT SELECT (project_id,project_label,session_id,repository,branch,head_commit,git_dirty,changed_files,git_stats,status,updated_at,current_action) ON public.agent_runtime TO context_bridge_reader;
+ALTER TABLE public.agent_runtime ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.agent_runtime;
+CREATE POLICY context_bridge_reader_select ON public.agent_runtime FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.session_metadata FROM context_bridge_reader;
+GRANT SELECT (project_id,project_label,session_id,repository,first_seen_at,last_seen_at,last_status,last_branch,last_head_commit,last_git_dirty,closed_at) ON public.session_metadata TO context_bridge_reader;
+ALTER TABLE public.session_metadata ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.session_metadata;
+CREATE POLICY context_bridge_reader_select ON public.session_metadata FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.work_events FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,repository,branch,head_commit,event_type,summary,created_at) ON public.work_events TO context_bridge_reader;
+ALTER TABLE public.work_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.work_events;
+CREATE POLICY context_bridge_reader_select ON public.work_events FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.session_snapshots FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,repository,branch,head_commit,status,current_task,approach_summary,recent_progress,current_problem,next_step,git_stats,captured_at) ON public.session_snapshots TO context_bridge_reader;
+ALTER TABLE public.session_snapshots ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.session_snapshots;
+CREATE POLICY context_bridge_reader_select ON public.session_snapshots FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.activity_events FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,event_type,category,tool_name,paths,outcome,duration_ms,created_at) ON public.activity_events TO context_bridge_reader;
+ALTER TABLE public.activity_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.activity_events;
+CREATE POLICY context_bridge_reader_select ON public.activity_events FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.decision_log FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,decision,rationale,state,branch,head_commit,first_seen_at,last_seen_at) ON public.decision_log TO context_bridge_reader;
+ALTER TABLE public.decision_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.decision_log;
+CREATE POLICY context_bridge_reader_select ON public.decision_log FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.diagnostic_events FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,summary,category,severity,source,retry_count,branch,head_commit,created_at,diagnostic_key) ON public.diagnostic_events TO context_bridge_reader;
+ALTER TABLE public.diagnostic_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.diagnostic_events;
+CREATE POLICY context_bridge_reader_select ON public.diagnostic_events FOR SELECT TO context_bridge_reader USING (true);
+REVOKE ALL ON public.validation_runs FROM context_bridge_reader;
+GRANT SELECT (id,project_id,project_label,session_id,kind,name,status,summary,passed,failed,skipped,duration_ms,created_at,branch,head_commit) ON public.validation_runs TO context_bridge_reader;
+ALTER TABLE public.validation_runs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS context_bridge_reader_select ON public.validation_runs;
+CREATE POLICY context_bridge_reader_select ON public.validation_runs FOR SELECT TO context_bridge_reader USING (true);
+ALTER ROLE context_bridge_reader SET default_transaction_read_only=on;
+ALTER ROLE context_bridge_reader SET statement_timeout='5s';
+COMMIT;
+-- Set password interactively using psql: \password context_bridge_reader
+-- No browser_context, work_events.details, decision_key, sequence or write grants.
+-- Audit inherited PUBLIC function/schema rights before deployment.
