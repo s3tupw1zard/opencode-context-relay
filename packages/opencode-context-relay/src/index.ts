@@ -1,5 +1,4 @@
 import { basename } from "node:path"
-import { Plugin } from "@opencode/plugin"
 import { classifyToolActivity, safeToolName, type ActivityCategory } from "./activity.js"
 import { configurationStatus, loadConfig, type BridgeConfig } from "./config.js"
 import { createLogger } from "./logger.js"
@@ -18,6 +17,39 @@ import {
 const PLUGIN_ID = "opencode-context-relay"
 
 type UnknownRecord = Record<string, unknown>
+
+type RelayToolEditor = {
+  namespace(input: { name: string; description: string }): unknown
+  add(input: {
+    name: string
+    description: string
+    options?: Record<string, unknown>
+    input: Record<string, unknown>
+    execute(input: unknown, context: { sessionID: string }): Promise<{ content: string }>
+  }): unknown
+}
+
+type RelayPluginContext = {
+  options?: Record<string, unknown>
+  location: {
+    directory: string
+    project: { id: string }
+  }
+  session: {
+    get(input: { sessionID: string }): Promise<unknown>
+  }
+  tool: {
+    transform(callback: (editor: RelayToolEditor) => void | Promise<void>): Promise<unknown>
+    hook(
+      name: "execute.before" | "execute.after",
+      callback: (event: unknown) => void | Promise<void>,
+    ): Promise<unknown>
+  }
+  event: {
+    subscribe(input: { signal: AbortSignal }): AsyncIterable<unknown>
+  }
+}
+
 
 interface SessionScope {
   directory: string
@@ -122,7 +154,7 @@ function executionKey(event: unknown, sessionID: string, tool: string): string {
   return callIDOf(event) ?? `${sessionID}:${tool}`
 }
 
-export default Plugin.define({
+const plugin = {
   id: PLUGIN_ID,
   async setup(ctx) {
     const options = (ctx.options ?? {}) as Record<string, unknown>
@@ -484,4 +516,6 @@ export default Plugin.define({
       controller.abort()
     }
   },
-})
+}
+
+export default plugin
