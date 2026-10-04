@@ -13,7 +13,7 @@ YEAR.RELEASE.PATCH[-PRERELEASE]
 Examples:
 
 ```text
-2026.1.0-dev.6
+2026.1.0-dev.7
 2026.1.0-rc.1
 2026.1.0
 2026.1.1
@@ -69,7 +69,7 @@ npm view opencode-context-relay versions --json
 For the current development release, `latest` should resolve to:
 
 ```text
-2026.1.0-dev.6
+2026.1.0-dev.7
 ```
 
 ## Release checklist
