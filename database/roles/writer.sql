@@ -15,13 +15,7 @@ BEGIN
 END
 $$;
 
-ALTER ROLE context_bridge_writer PASSWORD :'writer_password';
 ALTER ROLE context_bridge_writer SET statement_timeout = '5s';
-
-SELECT format(
-  'GRANT CONNECT ON DATABASE %I TO context_bridge_writer',
-  current_database()
-) \gexec
 
 REVOKE ALL ON SCHEMA context_bridge FROM PUBLIC;
 GRANT USAGE ON SCHEMA context_bridge TO context_bridge_writer;
