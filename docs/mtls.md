@@ -18,7 +18,7 @@ Official reference: <https://developers.openai.com/plugins/build/auth>
 The repository includes a helper that downloads the currently published root and connector intermediate directly from OpenAI, validates that the intermediate chains to the root, and writes a bundle for nginx:
 
 ```sh
-sudo ./scripts/update-openai-mtls-ca.sh
+sudo sh ./scripts/update-openai-mtls-ca.sh
 ```
 
 The underlying URLs are:
