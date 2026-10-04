@@ -1,6 +1,7 @@
 import { z } from "zod";
 const schema = z.object({
   DATABASE_URL: z.string().min(1),
+  DATABASE_SCHEMA: z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/).default("context_bridge"),
   MCP_HOST: z.string().default("127.0.0.1"),
   MCP_PORT: z.coerce.number().int().min(1).max(65535).default(8787),
   MCP_PUBLIC_URL: z.string().url(),
@@ -10,6 +11,8 @@ const schema = z.object({
   OAUTH_JWKS_URL: z.string().url().optional(),
   OAUTH_ALLOWED_SUBJECT: z.string().min(1).optional(),
   OAUTH_ALLOW_SHARED_BACKEND: z.enum(["true", "false"]).default("false"),
+  MCP_TRUST_PROXY_MTLS: z.enum(["true", "false"]).default("false"),
+  MCP_EXPECTED_OPENAI_SAN: z.string().min(1).default("mtls.prod.connectors.openai.com"),
   STORAGE_TIMEOUT_MS: z.coerce.number().int().min(100).max(30000).default(5000),
   STALE_AFTER_MS: z.coerce
     .number()
