@@ -14,6 +14,7 @@ try {
     c.DATABASE_URL,
     c.STORAGE_TIMEOUT_MS,
     c.STORAGE_MAX_ROWS,
+    undefined,
     c.DATABASE_SCHEMA,
   );
   const service = new ContextService(storage, c.STALE_AFTER_MS);
