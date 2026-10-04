@@ -48,7 +48,7 @@ test("all nine v2 tables checked with explicit columns, missing table/column and
     calls++;
     assert.match(sql, /LIMIT 0$/);
     assert.doesNotMatch(sql, /SELECT \*/);
-    const t = /public\.(\w+)/.exec(sql)![1] as keyof typeof tables;
+    const t = /"context_bridge"\."(\w+)"/.exec(sql)![1] as keyof typeof tables;
     return {
       rows: [],
       fields: (t === "diagnostic_events"
