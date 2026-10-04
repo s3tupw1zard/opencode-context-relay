@@ -9,6 +9,10 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 BACKUP=$1
 
+set -a
+. "$ROOT/.env"
+set +a
+
 [ -f "$BACKUP" ] || {
   echo "backup not found: $BACKUP" >&2
   exit 1
