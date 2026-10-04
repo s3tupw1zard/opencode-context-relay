@@ -7,6 +7,8 @@ COPY src ./src
 COPY tests ./tests
 RUN npm run build && npm prune --omit=dev
 FROM node:24-alpine
+LABEL org.opencontainers.image.source="https://github.com/s3tupw1zard/opencode-context-relay"
+LABEL org.opencontainers.image.description="Read-only ChatGPT MCP bridge for OpenCode Context Relay"
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
