@@ -68,7 +68,7 @@ The normal setup requires **no manual schema import**. The one-shot migration se
 After the npm prerelease is published:
 
 ```sh
-opencode plugin opencode-context-relay --global
+opencode plugin add opencode-context-relay@latest
 ```
 
 Provide the OpenCode process with the writer connection:
