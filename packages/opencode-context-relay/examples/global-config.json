@@ -1,0 +1,7 @@
+{
+  "databaseUrl": "postgresql://context_bridge_writer:REPLACE_ME@127.0.0.1:5432/context_bridge",
+  "databaseSchema": "context_bridge",
+  "historyEnabled": true,
+  "activityHistoryEnabled": true,
+  "logLevel": "info"
+}
