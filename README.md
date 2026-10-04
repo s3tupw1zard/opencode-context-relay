@@ -128,7 +128,13 @@ For a cloned development checkout, the repository includes nginx and mTLS helper
 
 Read [OpenAI-managed mTLS](docs/mtls.md).
 
-### 5. Connect ChatGPT
+### 5. Configure OAuth for ChatGPT
+
+Create an OAuth/OIDC client in your identity provider and enter its endpoints, scopes, client ID and client secret in ChatGPT's custom MCP server settings.
+
+Provider-specific examples for Pocket ID, authentik and Keycloak are documented in [OAuth setup for ChatGPT](docs/oauth-setup.md).
+
+### 6. Connect ChatGPT
 
 The MCP endpoint is normally:
 
@@ -207,6 +213,7 @@ This keeps moving the stack between hosts straightforward without depending on P
 
 - [Installation](docs/installation.md)
 - [OpenAI-managed mTLS](docs/mtls.md)
+- [OAuth setup for ChatGPT](docs/oauth-setup.md)
 - [Deployment topologies](docs/deployment-topologies.md)
 - [Releasing and npm channel policy](docs/releasing.md)
 - [OpenCode architecture notes](docs/opencode/architecture.md)
