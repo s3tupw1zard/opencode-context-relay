@@ -23,18 +23,30 @@ Examples:
 
 ## npm policy
 
-During development, **the newest published build is always the npm `latest` dist-tag, including prereleases**.
+npm distribution tags follow the release channel:
 
-That means OpenCode can stay configured with:
-
-```sh
-opencode plugin add opencode-context-relay@latest
+```text
+*-dev.N -> dev
+*-rc.N  -> next
+stable   -> latest
 ```
 
-and later:
+Examples:
+
+```text
+2026.1.0-dev.7 -> dev
+2026.1.0-rc.1  -> next
+2026.1.0       -> latest
+```
+
+Development releases must never overwrite `latest`.
+
+Consumers can choose a channel explicitly:
 
 ```sh
-opencode plugin update opencode-context-relay@latest
+opencode plugin add opencode-context-relay@dev
+opencode plugin add opencode-context-relay@next
+opencode plugin add opencode-context-relay@latest
 ```
 
 OpenCode v2 accepts npm versions, tags and ranges for package plugins.
@@ -47,25 +59,24 @@ Authenticate once:
 npm login
 ```
 
-Publish the OpenCode plugin:
+Normal releases are published by `.github/workflows/publish.yml` through npm Trusted Publishing.
 
-```sh
-cd packages/opencode-context-relay
-npm run check
-npm pack --dry-run
-npm publish --access public --tag latest
+The workflow derives the npm dist-tag automatically from the Git version:
+
+```text
+dev prerelease -> dev
+release candidate -> next
+stable release -> latest
 ```
 
-Publish the standalone ChatGPT bridge:
+It publishes both packages from the same trusted workflow:
 
-```sh
-cd ../../services/chatgpt-bridge
-npm run typecheck
-npm run lint
-npm test
-npm pack --dry-run
-npm publish --access public --tag latest
+```text
+opencode-context-relay
+opencode-context-relay-chatgpt
 ```
+
+Manual publishing should only be used for recovery and must use the same channel mapping.
 
 The published npm packages are:
 
@@ -85,11 +96,13 @@ npm view opencode-context-relay versions --json
 npm view opencode-context-relay-chatgpt dist-tags
 ```
 
-For the current development release, `latest` should resolve to:
+For the current development release, `dev` should resolve to:
 
 ```text
 2026.1.0-dev.7
 ```
+
+`latest` is reserved for stable releases.
 
 ## Release checklist
 
