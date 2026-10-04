@@ -1,7 +1,6 @@
 {
-  "name": "@opencode-context-relay/chatgpt-bridge",
+  "name": "opencode-context-relay-chatgpt",
   "version": "2026.1.0-dev.7",
-  "private": true,
   "description": "WIP read-only ChatGPT MCP bridge for OpenCode Context Relay.",
   "type": "module",
   "license": "AGPL-3.0-only",
@@ -19,7 +18,8 @@
     "lint": "eslint src tests",
     "test": "node --import tsx --test tests/*.test.ts",
     "start": "node --env-file=.env dist/src/main.js",
-    "dev": "tsx --env-file=.env src/main.ts"
+    "dev": "tsx --env-file=.env src/main.ts",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.31.0",
@@ -35,5 +35,17 @@
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0"
+  },
+  "bin": {
+    "opencode-context-relay-chatgpt": "./bin/opencode-context-relay-chatgpt.js"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
