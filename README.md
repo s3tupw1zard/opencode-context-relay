@@ -45,27 +45,61 @@ The npm package, ChatGPT bridge service and database schema are intended to move
 
 ## Quickstart
 
-### 1. Create local secrets
+The normal deployment does **not** require a local clone of this repository.
+
+### 1. Download only Compose and the environment template
 
 ```sh
-git clone https://github.com/s3tupw1zard/opencode-context-relay.git
+mkdir -p opencode-context-relay
 cd opencode-context-relay
-sh ./scripts/generate-env.sh
+
+curl -fsSL \
+  https://raw.githubusercontent.com/s3tupw1zard/opencode-context-relay/main/deploy/compose.yaml \
+  -o docker-compose.yaml
+
+curl -fsSL \
+  https://raw.githubusercontent.com/s3tupw1zard/opencode-context-relay/main/.env.example \
+  -o .env
 ```
 
-Edit `.env` and set your public MCP URL and OAuth settings.
-
-### 2. Start PostgreSQL, migrations and the ChatGPT bridge
+Generate three independent database passwords, for example:
 
 ```sh
-docker compose --env-file .env -f deploy/compose.yaml up -d --build
+openssl rand -hex 32
+openssl rand -hex 32
+openssl rand -hex 32
 ```
 
-The normal setup requires **no manual schema import**. The one-shot migration service applies missing migrations, records checksums and provisions the two database roles.
+Put them into `.env` as:
+
+```dotenv
+POSTGRES_ADMIN_PASSWORD=...
+CONTEXT_BRIDGE_WRITER_PASSWORD=...
+CONTEXT_BRIDGE_READER_PASSWORD=...
+```
+
+Then set `MCP_PUBLIC_URL`, `OAUTH_ISSUER` and the OAuth subject settings.
+
+### 2. Start the prebuilt stack
+
+```sh
+docker compose --env-file .env -f docker-compose.yaml pull
+docker compose --env-file .env -f docker-compose.yaml up -d
+```
+
+By default Compose uses:
+
+```text
+postgres:17
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
+```
+
+The migrator image already contains the migration files belonging to that release. It verifies applied migration checksums against the database and exits after the schema and roles are current.
+
+Set `CONTEXT_RELAY_VERSION=2026.1.0-dev.7` in `.env` if you want to pin the two project images to an exact release instead of following `latest`.
 
 ### 3. Install the OpenCode plugin
-
-After the npm prerelease is published:
 
 ```sh
 opencode plugin add opencode-context-relay@latest
@@ -82,26 +116,15 @@ export BRIDGE_DATABASE_URL="postgresql://context_bridge_writer:${CONTEXT_BRIDGE_
 export BRIDGE_DATABASE_SCHEMA=context_bridge
 ```
 
-The ChatGPT service uses only `context_bridge_reader`; it never receives the writer password.
+The ChatGPT bridge receives only `context_bridge_reader`.
+
+The ChatGPT service is also published as the standalone npm package `opencode-context-relay-chatgpt` for users who prefer running it directly with Node instead of Docker.
 
 ### 4. Configure the public MCP edge
 
-Prepare OpenAI's current connector CA bundle:
+For a cloned development checkout, the repository includes nginx and mTLS helpers under `deploy/nginx/` and `scripts/`. For repo-free deployments, download those individual files from the matching Git tag/release before exposing the endpoint.
 
-```sh
-sudo sh ./scripts/update-openai-mtls-ca.sh
-```
-
-Then adapt:
-
-```text
-deploy/nginx/http-mtls-maps.conf
-deploy/nginx/context-bridge.conf
-```
-
-The examples contain no project-specific domain, VPN or proxy assumptions.
-
-Read [OpenAI-managed mTLS](docs/mtls.md) before exposing the endpoint.
+Read [OpenAI-managed mTLS](docs/mtls.md).
 
 ### 5. Connect ChatGPT
 
@@ -111,7 +134,7 @@ The MCP endpoint is normally:
 https://context.example.com/mcp
 ```
 
-The service implements protected-resource discovery and verifies the OAuth token as a resource server. The reverse proxy verifies the OpenAI-managed client-certificate chain; the application additionally verifies the expected SAN when trusted proxy mTLS headers are enabled.
+The service implements protected-resource discovery and verifies OAuth tokens as a resource server. The reverse proxy validates the OpenAI-managed client certificate chain; the application additionally validates the expected SAN when trusted proxy mTLS headers are enabled.
 
 ## Database roles
 
