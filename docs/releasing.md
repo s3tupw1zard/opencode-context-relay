@@ -85,8 +85,6 @@ opencode-context-relay
 opencode-context-relay-chatgpt
 ```
 
-The explicit `--tag latest` is intentional. Do not rely on npm deciding a different prerelease channel.
-
 Verify:
 
 ```sh
@@ -110,7 +108,7 @@ For the current development release, `dev` should resolve to:
 2. Run both GitHub Actions workflows.
 3. Confirm the PostgreSQL migration set is forward-only; never edit an already released migration.
 4. Back up a real deployment and test the upgrade path when the schema changed.
-5. Publish the npm package with `--tag latest`.
+5. Push the matching Git tag; `publish.yml` publishes both npm packages to `dev`, `next`, or `latest` according to the version.
 6. Create the matching Git tag/release after the commit is final.
 7. Keep the WIP warning until the project has enough real-world testing to claim stability.
 
