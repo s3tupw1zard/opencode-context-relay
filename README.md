@@ -62,15 +62,15 @@ curl -fsSL \
   -o .env
 ```
 
-Generate three independent database passwords, for example:
+The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.7` in `.env` before pulling the images.
+
+Generate a unique password for each database password variable. Run `openssl rand -hex 32` once per variable and paste each generated value into `.env`:
 
 ```sh
 openssl rand -hex 32
-openssl rand -hex 32
-openssl rand -hex 32
 ```
 
-Put them into `.env` as:
+Use separate generated values for:
 
 ```dotenv
 POSTGRES_ADMIN_PASSWORD=...
@@ -83,27 +83,29 @@ Then set `MCP_PUBLIC_URL`, `OAUTH_ISSUER` and the OAuth subject settings.
 ### 2. Start the prebuilt stack
 
 ```sh
-docker compose --env-file .env -f docker-compose.yaml pull
-docker compose --env-file .env -f docker-compose.yaml up -d
+docker compose pull
+docker compose up -d
 ```
 
 By default Compose uses:
 
 ```text
 postgres:17
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
 ```
 
 The migrator image already contains the migration files belonging to that release. It verifies applied migration checksums against the database and exits after the schema and roles are current.
 
-Set `CONTEXT_RELAY_VERSION=2026.1.0-dev.7` in `.env` if you want to pin the two project images to an exact release instead of following the moving `dev` channel.
+For development builds, set `CONTEXT_RELAY_VERSION=dev`. To pin a specific development release, use an exact version such as `CONTEXT_RELAY_VERSION=2026.1.0-dev.7`.
 
 ### 3. Install the OpenCode plugin
 
 ```sh
-opencode plugin add opencode-context-relay@dev
+opencode plugin add opencode-context-relay@latest
 ```
+
+Use `opencode-context-relay@dev` or an exact development version only when intentionally testing a development release.
 
 Provide the OpenCode process with the writer connection:
 
