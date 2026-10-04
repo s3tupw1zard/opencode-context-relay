@@ -15,7 +15,7 @@ import {
   type RuntimeStatus,
 } from "./postgres.js"
 
-const PLUGIN_ID = "opencode-context-bridge"
+const PLUGIN_ID = "opencode-context-relay"
 
 type UnknownRecord = Record<string, unknown>
 
