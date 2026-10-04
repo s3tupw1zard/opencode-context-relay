@@ -81,14 +81,14 @@ export class BridgeLogger {
     const line = JSON.stringify({
       timestamp: new Date().toISOString(),
       level,
-      component: "opencode-context-bridge",
+      component: "opencode-context-relay",
       message: redactString(message),
       ...safeFields,
     })
 
-    if (level === "error") console.error(`[opencode-context-bridge] ${message}`, safeFields)
-    else if (level === "warn") console.warn(`[opencode-context-bridge] ${message}`, safeFields)
-    else if (level === "debug") console.debug(`[opencode-context-bridge] ${message}`, safeFields)
+    if (level === "error") console.error(`[opencode-context-relay] ${message}`, safeFields)
+    else if (level === "warn") console.warn(`[opencode-context-relay] ${message}`, safeFields)
+    else if (level === "debug") console.debug(`[opencode-context-relay] ${message}`, safeFields)
 
     this.queue = this.queue
       .then(async () => {
@@ -96,7 +96,7 @@ export class BridgeLogger {
         await appendFile(this.file, `${line}\n`, { encoding: "utf8", mode: 0o600 })
       })
       .catch((error) => {
-        console.error("[opencode-context-bridge] failed to write plugin log", sanitize(error))
+        console.error("[opencode-context-relay] failed to write plugin log", sanitize(error))
       })
   }
 }
