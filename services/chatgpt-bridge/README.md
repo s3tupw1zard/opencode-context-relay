@@ -1,37 +1,44 @@
-# Context Bridge for ChatGPT
+# ChatGPT bridge
 
-Private, executable read-only MCP consumer for the existing Coding Agent Context
-Bridge. OpenCode's publisher remains in `s3tupw1zard/opencode-context-bridge`.
+> ⚠️ **Work in progress / insufficiently tested.** This service is part of the `2026.1.0-dev.x` release train.
 
-Twelve read-only tools cover current context, session lifecycle and structured history.
+Read-only MCP resource server that exposes the structured context produced by `opencode-context-relay` to ChatGPT.
 
-- TypeScript + official MCP SDK, stateless Streamable HTTP, native tool calls.
-- Existing self-hosted Supabase/PostgreSQL via a dedicated PostgreSQL reader.
-- OAuth resource server, subject restriction, protected-resource discovery.
-- Multiple projects/sessions, freshness-aware aggregation, bounded typed outputs.
-- No UI, SQL/admin tools, writes, source-code reader or agent control.
+## Security model
 
-Start: `npm ci`, fill `.env` from `.env.example`, `npm run build`, `npm start`.
-Local port 8787; expose your chosen HTTPS `/mcp` through your existing proxy.
+- dedicated PostgreSQL login: `context_bridge_reader`;
+- explicit column-level SELECT grants;
+- no database writes;
+- OAuth 2.1 resource-server verification;
+- optional trusted-proxy validation of OpenAI-managed mTLS client-certificate SAN;
+- no generic SQL tool;
+- no source-code reader;
+- no agent-control/write actions.
 
-[Architecture](docs/architecture.md) · [Tools](docs/tools.md) ·
-[Security](docs/security.md) · [Supabase/rights](docs/self-hosted.md) ·
-[Development/deployment/ChatGPT connection](docs/deployment.md)
+The bridge queries the `context_bridge` schema by default.
 
-`npm run typecheck && npm run lint && npm test && npm run build`
+## Normal deployment
 
-Production setup still requires database reader provisioning, backend connectivity,
-Pocket ID configuration and a deployed HTTPS endpoint. None are silently
-performed on an unknown production database. No API keys belong in Git.
+Use the root Compose stack:
 
-Official references checked 2026-10-01:
+```sh
+docker compose --env-file .env -f deploy/compose.yaml up -d --build
+```
 
-- https://developers.openai.com/plugins/build/mcp-server
-- https://developers.openai.com/plugins/build/auth
-- https://supabase.com/docs/guides/database/postgres/roles
+The service itself listens on port 8787 inside the container. The default Compose mapping binds it only to `127.0.0.1` on the host.
 
-## Version 0.2.0: producer Context Model v2
+For public ChatGPT access, put the generic nginx configuration from `deploy/nginx/` in front of it and follow [the mTLS guide](../../docs/mtls.md).
 
-Continues the existing v1 server with five bounded history tools, structured Git/decision/diagnostic/check summaries, session metadata/lifecycle and nine-table schema health. See [v2 contract](docs/context-model-v2.md), [Pocket ID setup](docs/pocket-id.md), [manual DB setup](docs/self-hosted.md) and [deployment](docs/deployment.md). Canonical producer source is pinned, not recreated independently. No production schema writes or deployment run automatically.
+## Development
 
-The twelve read-only tools are `list_projects`, `get_project_status`, `get_active_sessions`, `get_current_context`, `get_recent_events`, `get_project_changes`, `health`, `get_session_history`, `get_activity_timeline`, `get_decisions`, `get_diagnostics`, `get_validation_runs`.
+From this directory:
+
+```sh
+npm ci
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+See the root [installation guide](../../docs/installation.md) and [deployment topologies](../../docs/deployment-topologies.md).
