@@ -14,6 +14,7 @@ try {
     c.DATABASE_URL,
     c.STORAGE_TIMEOUT_MS,
     c.STORAGE_MAX_ROWS,
+    c.DATABASE_SCHEMA,
   );
   const service = new ContextService(storage, c.STALE_AFTER_MS);
   const db = new URL(c.DATABASE_URL);
@@ -29,6 +30,8 @@ try {
       subject: c.OAUTH_ALLOWED_SUBJECT,
       token: c.MCP_BEARER_TOKEN,
     }),
+    trustProxyMtls: c.MCP_TRUST_PROXY_MTLS === "true",
+    expectedOpenAiSan: c.MCP_EXPECTED_OPENAI_SAN,
     secrets: [
       c.DATABASE_URL,
       decodeURIComponent(db.password),
