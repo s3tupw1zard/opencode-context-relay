@@ -56,7 +56,7 @@ No manual `psql -f ...` sequence is required for the normal Compose setup.
 Once the npm prerelease is published:
 
 ```sh
-opencode plugin opencode-context-relay --global
+opencode plugin add opencode-context-relay@latest
 ```
 
 The unversioned package resolves through npm's `latest` dist-tag. This project intentionally moves `latest` to the newest published build, including development prereleases, until a different release-channel policy is documented.
