@@ -9,3 +9,5 @@ coverage/
 *.log
 *.dump
 .DS_Store
+
+**/package-lock.json
