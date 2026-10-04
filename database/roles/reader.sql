@@ -106,12 +106,12 @@ END
 $$;
 
 REVOKE ALL ON context_bridge.browser_context FROM context_bridge_reader;
-DO $
+DO $grant$
 BEGIN
   IF to_regclass('context_bridge.schema_migrations') IS NOT NULL THEN
     EXECUTE 'REVOKE ALL ON context_bridge.schema_migrations FROM context_bridge_reader';
   END IF;
 END
-$;
+$grant$;
 
 COMMIT;
