@@ -79,7 +79,7 @@ function poolFor(config: BridgeConfig & { databaseUrl: string }): Pool {
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
     statement_timeout: 5_000,
-    application_name: "opencode-context-bridge",
+    application_name: "opencode-context-relay",
   })
   pool.on("error", (error) => {
     postgresLogger?.error("PostgreSQL pool error", { error })
