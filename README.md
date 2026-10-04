@@ -91,13 +91,13 @@ By default Compose uses:
 
 ```text
 postgres:17
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
 ```
 
 The migrator image already contains the migration files belonging to that release. It verifies applied migration checksums against the database and exits after the schema and roles are current.
 
-Set `CONTEXT_RELAY_VERSION=2026.1.0-dev.7` in `.env` if you want to pin the two project images to an exact release instead of following `latest`.
+Set `CONTEXT_RELAY_VERSION=2026.1.0-dev.7` in `.env` if you want to pin the two project images to an exact release instead of following the moving `dev` channel.
 
 ### 3. Install the OpenCode plugin
 
