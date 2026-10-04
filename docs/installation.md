@@ -138,3 +138,7 @@ sh ./scripts/restore-postgres.sh path/to/context_bridge.dump
 ```
 
 Named Docker volumes are the default, but logical PostgreSQL dumps keep host migrations straightforward.
+
+## Releases
+
+See [Releasing](releasing.md) for the CalVer/SemVer scheme and the policy that npm `latest` always points to the newest published build, including prereleases.
