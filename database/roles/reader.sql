@@ -15,14 +15,8 @@ BEGIN
 END
 $$;
 
-ALTER ROLE context_bridge_reader PASSWORD :'reader_password';
 ALTER ROLE context_bridge_reader SET default_transaction_read_only = on;
 ALTER ROLE context_bridge_reader SET statement_timeout = '5s';
-
-SELECT format(
-  'GRANT CONNECT ON DATABASE %I TO context_bridge_reader',
-  current_database()
-) \gexec
 
 GRANT USAGE ON SCHEMA context_bridge TO context_bridge_reader;
 
