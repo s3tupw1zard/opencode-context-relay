@@ -1,4 +1,4 @@
-name: check
+name: OpenCode relay checks
 
 on:
   push:
@@ -10,8 +10,12 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/opencode-context-relay
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun run check
+      - run: npm pack --dry-run
