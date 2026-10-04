@@ -1,0 +1,15 @@
+# Context Model v2
+
+Consumer version 0.2.0 targets producer PR #1, branch `feat/richer-context-model`, pinned commit `d8424848754bf1c5d1e7ed07d94c571e3652431a`. The unmodified canonical schema is vendored in `sql/publisher-schema-v2.sql`; `sql/producer-provenance.json` records its source and checksum. Existing installations use the producer migration `supabase/migrations/20261001_richer_context_model.sql` at that commit. No migrations run at server startup.
+
+Current requests load only bounded `agent_state`, `agent_runtime`, and `session_metadata` in a repeatable-read transaction. History is queried separately by project, optional session, time and filters, with fixed projections, parameterized predicates, statement timeout and limit+1. It never loads the entire history into memory. Indexes from the producer cover project/session and time; assess query plans before adding workload-specific indexes.
+
+`git_stats` accepts only the thirteen producer aggregate integers. Unknown keys are stripped recursively from `decision_details`, `diagnostics` and `checks`. Snapshot history returns compact task/progress/problem/next-step summaries and Git aggregates, not every semantic field. Browser context, raw tool arguments/results, arbitrary SQL, source, diffs and event details are excluded. Text is treated as untrusted context, sanitized and bounded.
+
+Session identity is `(project_id, session_id)`. Metadata-only sessions remain visible. `first_seen_at`, `last_seen_at`, `closed_at`, `stale`, `context_stale` and `lifecycle` distinguish freshness from completion. A closed session is excluded from active counts and aggregate blocking; later recorded activity reopens it. The pinned producer creates `closed_at` but does not populate it: absence does not imply completion. Fresh blocked outranks working, then idle; all-closed projects report closed, otherwise no fresh open sessions report stale.
+
+History is newest timestamp first, then bigint ID descending. Cursors retain PostgreSQL microseconds and bind table, project, session, time and category filters; changing page size is allowed. `since` is inclusive, `until` exclusive. Concurrent append-only history remains traversable; decision rows are upserted, so paging their evolving latest state is not a frozen audit snapshot.
+
+Decisions are deduplicated latest state/rationale, not a state-transition audit. Diagnostics and validations are appended on publication and may repeat the same underlying problem/check. Diagnostic `group_by_problem=true` requires both time bounds with a maximum seven-day window. `occurrence_count` counts publications grouped by producer diagnostic key per session, not independent failures or retries. `retry_count` is supplied by producer. Validation rows are published summaries, not a guaranteed distinct execution count.
+
+Health uses explicit column SELECT LIMIT 0 across all nine reader tables and validates PostgreSQL data types. Missing table/column/type reports `schema=incompatible`; connectivity/permission failures report unavailable/unverified. It does not claim publisher freshness or correct deployment merely because schema is compatible.
