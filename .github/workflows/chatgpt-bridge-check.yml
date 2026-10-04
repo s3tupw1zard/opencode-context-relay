@@ -34,6 +34,19 @@ jobs:
           cache: npm
           cache-dependency-path: services/chatgpt-bridge/package-lock.json
       - run: npm ci
+      - name: Smoke-test database migrator twice
+        working-directory: .
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: context_bridge
+          PGUSER: postgres
+          PGPASSWORD: ci-only-admin
+          CONTEXT_BRIDGE_WRITER_PASSWORD: ci-writer-password
+          CONTEXT_BRIDGE_READER_PASSWORD: ci-reader-password
+        run: |
+          sh ./database/migrate.sh
+          sh ./database/migrate.sh
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
