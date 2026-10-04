@@ -183,6 +183,7 @@ This keeps moving the stack between hosts straightforward without depending on P
 - [Installation](docs/installation.md)
 - [OpenAI-managed mTLS](docs/mtls.md)
 - [Deployment topologies](docs/deployment-topologies.md)
+- [Releasing and npm `latest` policy](docs/releasing.md)
 - [OpenCode architecture notes](docs/opencode/architecture.md)
 - [ChatGPT bridge architecture](docs/chatgpt/architecture.md)
 - [ChatGPT bridge security model](docs/chatgpt/security.md)
