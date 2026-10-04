@@ -1,0 +1,27 @@
+{
+  "name": "opencode-context-bridge",
+  "version": "2026.1.0-dev.5",
+  "private": true,
+  "type": "module",
+  "description": "Safe OpenCode v2 context bridge for ChatGPT using structured PostgreSQL state/history and exact GitHub code.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.4",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "@types/pg": "^8.15.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
