@@ -131,14 +131,15 @@ function parseRows<T>(
 }
 export class PostgresStorage implements Storage {
   private pool: SqlPool;
+  private schema: string;
   constructor(
     url: string,
     timeout = 5000,
     private rowCap = 1000,
-    private schema = "context_bridge",
     pool?: SqlPool,
+    schema = "context_bridge",
   ) {
-    this.schema = validateSchemaName(this.schema);
+    this.schema = validateSchemaName(schema);
     this.pool =
       pool ??
       new pg.Pool({
