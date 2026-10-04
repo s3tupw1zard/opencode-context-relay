@@ -125,10 +125,10 @@ triggers `.github/workflows/release-images.yml` and publishes:
 
 ```text
 ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:2026.1.0-dev.7
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
 
 ghcr.io/s3tupw1zard/opencode-context-relay-migrator:2026.1.0-dev.7
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:latest
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
 ```
 
 The migrator image contains the exact SQL migrations and role definitions from that tag. It never downloads migration SQL from a moving branch at runtime.
