@@ -3,10 +3,6 @@
   "version": "2026.1.0-dev.6",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "services/*"
-  ],
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
