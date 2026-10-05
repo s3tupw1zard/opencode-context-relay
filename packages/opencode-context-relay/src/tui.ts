@@ -1,16 +1,58 @@
-import { Plugin } from "@opencode/plugin/tui"
 import { ContextRelayRpc } from "./rpc.js"
 import {
   isRelayStatusSnapshot,
   noticeForRelayStatus,
   type RelayDatabaseStatus,
+  type RelayNoticeVariant,
 } from "./status.js"
 
 const TUI_PLUGIN_ID = "opencode-context-relay.tui"
 
-const plugin = Plugin.define({
+interface LocationRef {
+  directory: string
+  workspaceID?: string
+}
+
+interface RelayRpcEvent {
+  data: unknown
+  location: LocationRef
+}
+
+interface RelayRpcClient {
+  status(input: Record<string, never>, options: { location: LocationRef }): Promise<unknown>
+  events: {
+    on(
+      name: "status_changed",
+      handler: (event: RelayRpcEvent) => void | Promise<void>,
+    ): () => void
+  }
+}
+
+interface RelayTuiContext {
+  location?: LocationRef
+  client: {
+    rpc(definition: typeof ContextRelayRpc): RelayRpcClient
+  }
+  data: {
+    location: {
+      default(): LocationRef
+    }
+  }
+  ui: {
+    toast: {
+      show(options: {
+        title?: string
+        message: string
+        variant?: RelayNoticeVariant
+        duration?: number
+      }): void
+    }
+  }
+}
+
+const plugin = {
   id: TUI_PLUGIN_ID,
-  async setup(context) {
+  async setup(context: RelayTuiContext) {
     const relay = context.client.rpc(ContextRelayRpc)
     const location = context.location ?? context.data.location.default()
     let lastStatus: RelayDatabaseStatus | undefined
@@ -53,6 +95,6 @@ const plugin = Plugin.define({
       stop()
     }
   },
-})
+}
 
 export default plugin
