@@ -1,14 +1,30 @@
 {
   "name": "opencode-context-relay",
-  "version": "2026.1.0-dev.8",
+  "version": "2026.1.0-dev.9",
   "description": "WIP OpenCode v2 context relay for safe structured PostgreSQL state consumed by ChatGPT.",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/index.ts",
-    "./tui": "./src/tui.ts",
-    "./rpc": "./src/rpc.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./tui": {
+      "types": "./dist/tui.d.ts",
+      "import": "./dist/tui.js",
+      "default": "./dist/tui.js"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js",
+      "default": "./dist/rpc.js"
+    }
   },
   "license": "AGPL-3.0-only",
   "repository": {
@@ -30,7 +46,7 @@
     "relay"
   ],
   "files": [
-    "src/",
+    "dist/",
     "README.md",
     "LICENSE"
   ],
@@ -38,9 +54,13 @@
     "access": "public"
   },
   "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "check": "bun run typecheck && bun test",
+    "smoke:package": "node scripts/smoke-package.mjs",
+    "check": "bun run typecheck && bun test && npm run build && npm run smoke:package",
+    "prepack": "npm run build",
     "pack:check": "npm pack --dry-run"
   },
   "dependencies": {
@@ -54,5 +74,6 @@
   "engines": {
     "node": ">=22",
     "opencode": ">=2.0.4"
-  }
+  },
+  "types": "./dist/index.d.ts"
 }
