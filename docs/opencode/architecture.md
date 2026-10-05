@@ -23,9 +23,10 @@ The native v2 plugin:
 
 1. observes tool/session lifecycle events,
 2. publishes throttled low-detail runtime state,
-3. exposes `bridge_publish_context`, a strictly structured tool for semantic context,
-4. reads safe Git metadata for correlation with repository state,
-5. records sanitized structured history when enabled.
+3. exposes `bridge_publish_context` as a direct model-visible, strictly structured tool for semantic context,
+4. injects a stable v2 session-context reminder so the active coding model publishes semantic checkpoints automatically,
+5. reads safe Git metadata for correlation with repository state,
+6. records sanitized structured history when enabled.
 
 The plugin does not stage, commit, push or otherwise mutate Git state. Git workflow automation is intentionally outside this repository's scope.
 
@@ -33,7 +34,7 @@ The active coding model supplies the *meaning* of the current work while determi
 
 ## Why the coding model writes the summary
 
-A separate summarizer would either need a second model call or access to raw transcripts/diffs. OpenCode's active model already understands the feature, reasoning and decisions. Giving it a narrow structured publishing tool produces higher-value context while reducing data exposure.
+A separate summarizer would either need a second model call or access to raw transcripts/diffs. OpenCode's active model already understands the feature, reasoning and decisions. Giving it a narrow structured publishing tool produces higher-value context while reducing data exposure. The reminder is injected into the transient model request only; it does not persist or copy the user's prompt, transcript, source code or tool output into PostgreSQL.
 
 ## Query pattern for ChatGPT
 
