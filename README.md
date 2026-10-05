@@ -27,7 +27,7 @@ ChatGPT
 
 ## Components
 
-- **`packages/opencode-context-relay`** — public OpenCode v2 plugin, published as `opencode-context-relay`.
+- **`packages/opencode-context-relay`** — public OpenCode v2 server + TUI plugin, published together as `opencode-context-relay`.
 - **`services/chatgpt-bridge`** — read-only MCP resource server for ChatGPT.
 - **`database`** — canonical schema migrations plus dedicated writer/reader roles.
 - **`deploy`** — Docker Compose and generic nginx examples.
@@ -106,6 +106,8 @@ opencode plugin add opencode-context-relay@latest
 ```
 
 Use `opencode-context-relay@dev` or an exact development version only when intentionally testing a development release.
+
+The same npm package provides both the server plugin and its TUI health integration. When PostgreSQL is unavailable, misconfigured, missing the relay schema, or publishing fails, OpenCode can surface a Context Relay toast; recovery is reported once the connection becomes healthy again.
 
 Provide the OpenCode process with the writer connection:
 
