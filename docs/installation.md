@@ -26,7 +26,7 @@ curl -fsSL \
   -o .env
 ```
 
-The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.8` in `.env` before pulling the images.
+The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.9` in `.env` before pulling the images.
 
 Generate a unique password for each database password variable. Run `openssl rand -hex 32` once per variable and paste each generated value into `.env`:
 
@@ -72,7 +72,7 @@ CONTEXT_RELAY_VERSION=dev
 To pin a specific development release, use an exact version such as:
 
 ```dotenv
-CONTEXT_RELAY_VERSION=2026.1.0-dev.8
+CONTEXT_RELAY_VERSION=2026.1.0-dev.9
 ```
 
 ## 3. Install the OpenCode producer
