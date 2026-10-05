@@ -6,6 +6,7 @@ import { buildSnapshot, sanitizeSemanticContext, type SemanticContextInput } fro
 import { readGitState, type GitState } from "./git.js"
 import { pathHintsFromToolInput } from "./privacy.js"
 import { ContextRelayRpc } from "./rpc.js"
+import { CONTEXT_TOOL_OPTIONS, SEMANTIC_CONTEXT_GUIDANCE } from "./semantic.js"
 import {
   createRelayStatus,
   type RelayDatabaseStatus,
@@ -52,6 +53,14 @@ type RelayRpcDomain = {
   ): Promise<RelayRpcRegistration>
 }
 
+type RelaySessionContextEvent = {
+  sessionID: string
+  system: Array<{
+    type: string
+    text: string
+  }>
+}
+
 type RelayPluginContext = {
   options?: Record<string, unknown>
   location: {
@@ -61,6 +70,10 @@ type RelayPluginContext = {
   rpc: RelayRpcDomain
   session: {
     get(input: { sessionID: string }): Promise<unknown>
+    hook(
+      name: "context",
+      callback: (event: RelaySessionContextEvent) => void | Promise<void>,
+    ): Promise<unknown>
   }
   tool: {
     transform(callback: (editor: RelayToolEditor) => void | Promise<void>): Promise<unknown>
@@ -353,7 +366,7 @@ const plugin = {
         name: "publish_context",
         description:
           "Publish structured semantic OpenCode context. Include decisions, diagnostics and validation/check results when useful. Never include source code, diffs, raw terminal output, prompts, credentials or secrets.",
-        options: { namespace: "bridge" },
+        options: CONTEXT_TOOL_OPTIONS,
         input: {
           type: "object",
           additionalProperties: false,
@@ -496,6 +509,16 @@ const plugin = {
       })
     })
 
+    await ctx.session.hook("context", async (event) => {
+      const scope = await scopeForSession(event.sessionID)
+      if (!scope.belongsToPluginProject) return
+      if (!hasUsableDatabaseUrl(scope.config)) return
+
+      event.system.push({
+        type: "text",
+        text: SEMANTIC_CONTEXT_GUIDANCE,
+      })
+    })
 
     await ctx.tool.hook("execute.before", async (event: unknown) => {
       const sessionID = sessionIDOf(event)
