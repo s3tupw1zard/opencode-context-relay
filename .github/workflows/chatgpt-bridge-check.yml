@@ -1,0 +1,64 @@
+name: ChatGPT bridge checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only-admin
+          POSTGRES_DB: context_bridge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d context_bridge"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:ci-only-admin@localhost:5432/context_bridge
+    defaults:
+      run:
+        working-directory: services/chatgpt-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - name: Smoke-test database migrator twice
+        working-directory: .
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: context_bridge
+          PGUSER: postgres
+          PGPASSWORD: ci-only-admin
+          CONTEXT_BRIDGE_WRITER_PASSWORD: ci-writer-password
+          CONTEXT_BRIDGE_READER_PASSWORD: ci-reader-password
+        run: |
+          sh ./database/migrate.sh
+          sh ./database/migrate.sh
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm pack --dry-run
+
+      - name: Validate Compose configuration
+        working-directory: .
+        run: docker compose --env-file .env.example -f deploy/compose.yaml config >/dev/null
+
+      - name: Build ChatGPT container image
+        working-directory: .
+        run: docker build -t opencode-context-relay-chatgpt:test services/chatgpt-bridge
+
+      - name: Build migrator container image
+        working-directory: .
+        run: docker build -t opencode-context-relay-migrator:test database

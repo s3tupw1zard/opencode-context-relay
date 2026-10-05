@@ -1,0 +1,167 @@
+name: Publish npm packages
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate-release:
+    name: Validate release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      dist_tag: ${{ steps.release.outputs.dist_tag }}
+      source_branch: ${{ steps.release.outputs.source_branch }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag, versions and release channel
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+
+          if [[ ! "$version" =~ ^[0-9]{4}\.[0-9]+\.[0-9]+(-(dev|rc)\.[0-9]+)?$ ]]; then
+            echo "Unsupported release tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          relay_version="$(node -p "require('./packages/opencode-context-relay/package.json').version")"
+          chatgpt_version="$(node -p "require('./services/chatgpt-bridge/package.json').version")"
+
+          if [[ "$relay_version" != "$version" ]]; then
+            echo "opencode-context-relay version $relay_version does not match tag $version" >&2
+            exit 1
+          fi
+
+          if [[ "$chatgpt_version" != "$version" ]]; then
+            echo "opencode-context-relay-chatgpt version $chatgpt_version does not match tag $version" >&2
+            exit 1
+          fi
+
+          case "$version" in
+            *-dev.*)
+              dist_tag="dev"
+              source_branch="dev"
+              ;;
+            *-rc.*)
+              dist_tag="next"
+              source_branch="dev"
+              ;;
+            *-*)
+              echo "Unsupported prerelease channel in $version" >&2
+              exit 1
+              ;;
+            *)
+              dist_tag="latest"
+              source_branch="main"
+              ;;
+          esac
+
+          git fetch origin "refs/heads/$source_branch:refs/remotes/origin/$source_branch" --no-tags
+          release_commit="$(git rev-list -n 1 "$GITHUB_REF_NAME")"
+
+          if ! git merge-base --is-ancestor "$release_commit" "origin/$source_branch"; then
+            echo "Tag $GITHUB_REF_NAME is not based on $source_branch" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
+          echo "source_branch=$source_branch" >> "$GITHUB_OUTPUT"
+
+          echo "Release $version -> npm dist-tag $dist_tag from $source_branch"
+
+  publish:
+    name: Publish ${{ matrix.package }}
+    needs: validate-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: opencode-context-relay
+            directory: packages/opencode-context-relay
+            kind: relay
+          - package: opencode-context-relay-chatgpt
+            directory: services/chatgpt-bridge
+            kind: chatgpt
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Ensure Trusted Publishing compatible npm
+        run: npm install --global npm@latest
+
+      - name: Show npm version
+        run: npm --version
+
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.kind == 'relay'
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.directory }}
+        run: npm install --no-audit --no-fund
+
+      - name: Verify OpenCode relay
+        if: matrix.kind == 'relay'
+        working-directory: ${{ matrix.directory }}
+        run: |
+          npm run check
+          npm pack --dry-run
+
+      - name: Verify ChatGPT bridge
+        if: matrix.kind == 'chatgpt'
+        working-directory: ${{ matrix.directory }}
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build
+          npm pack --dry-run
+
+      - name: Verify package metadata
+        working-directory: ${{ matrix.directory }}
+        env:
+          EXPECTED_PACKAGE: ${{ matrix.package }}
+          EXPECTED_VERSION: ${{ needs.validate-release.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_name="$(node -p "require('./package.json').name")"
+          package_version="$(node -p "require('./package.json').version")"
+
+          [[ "$package_name" == "$EXPECTED_PACKAGE" ]]
+          [[ "$package_version" == "$EXPECTED_VERSION" ]]
+
+      - name: Publish to npm
+        working-directory: ${{ matrix.directory }}
+        env:
+          PACKAGE_NAME: ${{ matrix.package }}
+          VERSION: ${{ needs.validate-release.outputs.version }}
+          DIST_TAG: ${{ needs.validate-release.outputs.dist_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if npm view "$PACKAGE_NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$PACKAGE_NAME@$VERSION already exists on npm; skipping."
+            exit 0
+          fi
+
+          npm publish --access public --tag "$DIST_TAG"

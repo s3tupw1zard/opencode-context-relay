@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    "github:s3tupw1zard/opencode-context-bridge"
+  ]
+}

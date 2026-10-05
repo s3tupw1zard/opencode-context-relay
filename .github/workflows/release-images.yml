@@ -1,0 +1,127 @@
+name: Publish container images
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  validate-release:
+    name: Validate release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      channel: ${{ steps.release.outputs.channel }}
+      source_branch: ${{ steps.release.outputs.source_branch }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag and release channel
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+
+          if [[ ! "$version" =~ ^[0-9]{4}\.[0-9]+\.[0-9]+(-(dev|rc)\.[0-9]+)?$ ]]; then
+            echo "Unsupported release tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          relay_version="$(node -p "require('./packages/opencode-context-relay/package.json').version")"
+          chatgpt_version="$(node -p "require('./services/chatgpt-bridge/package.json').version")"
+
+          [[ "$relay_version" == "$version" ]] || {
+            echo "OpenCode relay version $relay_version does not match tag $version" >&2
+            exit 1
+          }
+
+          [[ "$chatgpt_version" == "$version" ]] || {
+            echo "ChatGPT bridge version $chatgpt_version does not match tag $version" >&2
+            exit 1
+          }
+
+          case "$version" in
+            *-dev.*)
+              channel="dev"
+              source_branch="dev"
+              ;;
+            *-rc.*)
+              channel="next"
+              source_branch="dev"
+              ;;
+            *-*)
+              echo "Unsupported prerelease channel in $version" >&2
+              exit 1
+              ;;
+            *)
+              channel="latest"
+              source_branch="main"
+              ;;
+          esac
+
+          git fetch origin "refs/heads/$source_branch:refs/remotes/origin/$source_branch" --no-tags
+          release_commit="$(git rev-list -n 1 "$GITHUB_REF_NAME")"
+
+          if ! git merge-base --is-ancestor "$release_commit" "origin/$source_branch"; then
+            echo "Tag $GITHUB_REF_NAME is not based on $source_branch" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "source_branch=$source_branch" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish container images
+    needs: validate-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish ChatGPT bridge image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/chatgpt-bridge
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:${{ needs.validate-release.outputs.version }}
+            ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:${{ needs.validate-release.outputs.channel }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/s3tupw1zard/opencode-context-relay
+            org.opencontainers.image.version=${{ needs.validate-release.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Publish migrator image
+        uses: docker/build-push-action@v6
+        with:
+          context: database
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/s3tupw1zard/opencode-context-relay-migrator:${{ needs.validate-release.outputs.version }}
+            ghcr.io/s3tupw1zard/opencode-context-relay-migrator:${{ needs.validate-release.outputs.channel }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/s3tupw1zard/opencode-context-relay
+            org.opencontainers.image.version=${{ needs.validate-release.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}

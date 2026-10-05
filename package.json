@@ -1,0 +1,11 @@
+{
+  "name": "opencode-context-relay-monorepo",
+  "version": "2026.1.0-dev.8",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s3tupw1zard/opencode-context-relay.git"
+  }
+}

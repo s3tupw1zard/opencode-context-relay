@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+*.log
+*.dump
+.DS_Store
+
+**/package-lock.json
+**/bun.lock

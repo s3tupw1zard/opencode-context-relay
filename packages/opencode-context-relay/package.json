@@ -1,0 +1,58 @@
+{
+  "name": "opencode-context-relay",
+  "version": "2026.1.0-dev.8",
+  "description": "WIP OpenCode v2 context relay for safe structured PostgreSQL state consumed by ChatGPT.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/index.ts",
+    "./tui": "./src/tui.ts",
+    "./rpc": "./src/rpc.ts"
+  },
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s3tupw1zard/opencode-context-relay.git",
+    "directory": "packages/opencode-context-relay"
+  },
+  "homepage": "https://github.com/s3tupw1zard/opencode-context-relay#readme",
+  "bugs": {
+    "url": "https://github.com/s3tupw1zard/opencode-context-relay/issues"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "chatgpt",
+    "mcp",
+    "postgresql",
+    "context",
+    "relay"
+  ],
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "@types/pg": "^8.15.5"
+  },
+  "engines": {
+    "node": ">=22",
+    "opencode": ">=2.0.4"
+  }
+}
