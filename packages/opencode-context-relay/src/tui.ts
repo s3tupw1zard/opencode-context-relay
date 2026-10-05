@@ -12,6 +12,7 @@ const plugin = Plugin.define({
   id: TUI_PLUGIN_ID,
   async setup(context) {
     const relay = context.client.rpc(ContextRelayRpc)
+    const location = context.location ?? context.data.location.default()
     let lastStatus: RelayDatabaseStatus | undefined
 
     const applyStatus = (value: unknown) => {
@@ -30,11 +31,12 @@ const plugin = Plugin.define({
     }
 
     const stop = relay.events.on("status_changed", (event) => {
+      if (event.location.directory !== location.directory) return
       applyStatus(event.data)
     })
 
     try {
-      applyStatus(await relay.status({}))
+      applyStatus(await relay.status({}, { location }))
     } catch {
       if (lastStatus === undefined) {
         context.ui.toast.show({
