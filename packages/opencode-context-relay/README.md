@@ -2,7 +2,7 @@
 
 > ⚠️ **Work in progress / insufficiently tested.** This package is a development prerelease. Configuration and storage behavior may change between `2026.1.0-dev.x` builds.
 
-OpenCode v2 plugin that publishes a deliberately small, structured view of active coding work to PostgreSQL for the read-only ChatGPT bridge in the same repository.
+OpenCode v2 plugin that publishes a deliberately small, structured view of active coding work to PostgreSQL for the read-only ChatGPT bridge in the same repository. The active coding model is reminded through the v2 session context hook to publish semantic checkpoints automatically while it works.
 
 It does **not** publish raw source code, full diffs, prompts, terminal transcripts, credentials or arbitrary tool results.
 
