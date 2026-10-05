@@ -15,7 +15,19 @@ jobs:
         working-directory: packages/opencode-context-relay
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - uses: oven-sh/setup-bun@v2
-      - run: bun install
+      - name: Install npm dependencies without deprecation warnings
+        shell: bash
+        run: |
+          set -o pipefail
+          output="$(npm install --ignore-scripts --no-audit --no-fund --package-lock=false 2>&1)"
+          printf '%s\n' "$output"
+          if grep -Fq 'npm warn deprecated' <<<"$output"; then
+            echo "::error::npm install emitted deprecation warnings"
+            exit 1
+          fi
       - run: bun run check
       - run: npm pack --dry-run
