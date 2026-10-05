@@ -86,6 +86,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -99,6 +103,7 @@ jobs:
         with:
           context: services/chatgpt-bridge
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:${{ needs.validate-release.outputs.version }}
             ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:${{ needs.validate-release.outputs.channel }}
@@ -112,6 +117,7 @@ jobs:
         with:
           context: database
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/s3tupw1zard/opencode-context-relay-migrator:${{ needs.validate-release.outputs.version }}
             ghcr.io/s3tupw1zard/opencode-context-relay-migrator:${{ needs.validate-release.outputs.channel }}
