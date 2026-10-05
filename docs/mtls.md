@@ -80,7 +80,7 @@ sudo curl -fsSL \
 For an exact development release, set `RELEASE_REF` to its Git tag instead, for example:
 
 ```sh
-RELEASE_REF=v2026.1.0-dev.8
+RELEASE_REF=v2026.1.0-dev.9
 ```
 
 The snippet must be loaded inside nginx's `http {}` context.
