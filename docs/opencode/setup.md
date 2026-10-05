@@ -162,7 +162,9 @@ Activity history stores tool names, broad categories, safe path hints, outcome a
 
 ## 7. Verify publishing
 
-Ask OpenCode to use `bridge.publish_context`. A successful call should return:
+With PostgreSQL configured, the plugin exposes `bridge.publish_context` directly to the model and injects a transient session-context reminder to keep semantic state current. A normal coding turn should therefore publish without a special user prompt.
+
+For a manual smoke test, ask OpenCode to use `bridge.publish_context`. A successful call should return:
 
 ```text
 Context snapshot published.
