@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const VERSION = "2026.1.0-dev.7";
+export const VERSION = "2026.1.0-dev.8";
 export const text = z.string().nullable();
 export const time = z
   .string()
