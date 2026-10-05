@@ -1,4 +1,3 @@
-import { Rpc } from "@opencode/plugin/rpc"
 import { RELAY_DATABASE_STATUSES } from "./status.js"
 
 const emptyObjectSchema = {
@@ -19,7 +18,14 @@ const relayStatusSchema = {
   additionalProperties: false,
 } as const
 
-export const ContextRelayRpc = Rpc.define({
+/**
+ * Portable OpenCode RPC definition.
+ *
+ * This is deliberately kept as a plain structural definition instead of
+ * depending on @opencode/plugin at runtime. OpenCode's RPC client/server APIs
+ * consume this shape directly.
+ */
+export const ContextRelayRpc = {
   id: "opencode-context-relay",
   methods: {
     status: {
@@ -32,4 +38,4 @@ export const ContextRelayRpc = Rpc.define({
       schema: relayStatusSchema,
     },
   },
-})
+} as const
