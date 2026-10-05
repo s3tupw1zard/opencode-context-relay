@@ -6,7 +6,9 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/index.ts"
+    "./server": "./src/index.ts",
+    "./tui": "./src/tui.ts",
+    "./rpc": "./src/rpc.ts"
   },
   "license": "AGPL-3.0-only",
   "repository": {
@@ -42,6 +44,7 @@
     "pack:check": "npm pack --dry-run"
   },
   "dependencies": {
+    "@opencode/plugin": "^2.0.4",
     "pg": "^8.16.3"
   },
   "devDependencies": {
