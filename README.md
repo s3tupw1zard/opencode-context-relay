@@ -38,7 +38,7 @@ The old repositories were migrated into this monorepo. Their original source sna
 ## Current development version
 
 ```text
-2026.1.0-dev.7
+2026.1.0-dev.8
 ```
 
 The npm package, ChatGPT bridge service and database schema are intended to move on one release train.
@@ -62,7 +62,7 @@ curl -fsSL \
   -o .env
 ```
 
-The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.7` in `.env` before pulling the images.
+The downloaded Compose setup follows the stable `latest` image tag by default. To use a development build instead, set `CONTEXT_RELAY_VERSION=dev` or an exact development version such as `2026.1.0-dev.8` in `.env` before pulling the images.
 
 Generate a unique password for each database password variable. Run `openssl rand -hex 32` once per variable and paste each generated value into `.env`:
 
@@ -97,7 +97,7 @@ ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:latest
 
 The migrator image already contains the migration files belonging to that release. It verifies applied migration checksums against the database and exits after the schema and roles are current.
 
-For development builds, set `CONTEXT_RELAY_VERSION=dev`. To pin a specific development release, use an exact version such as `CONTEXT_RELAY_VERSION=2026.1.0-dev.7`.
+For development builds, set `CONTEXT_RELAY_VERSION=dev`. To pin a specific development release, use an exact version such as `CONTEXT_RELAY_VERSION=2026.1.0-dev.8`.
 
 ### 3. Install the OpenCode plugin
 
