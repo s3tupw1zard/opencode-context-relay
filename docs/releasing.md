@@ -13,7 +13,7 @@ YEAR.RELEASE.PATCH[-PRERELEASE]
 Examples:
 
 ```text
-2026.1.0-dev.7
+2026.1.0-dev.8
 2026.1.0-rc.1
 2026.1.0
 2026.1.1
@@ -34,7 +34,7 @@ stable   -> latest
 Examples:
 
 ```text
-2026.1.0-dev.7 -> dev
+2026.1.0-dev.8 -> dev
 2026.1.0-rc.1  -> next
 2026.1.0       -> latest
 ```
@@ -97,7 +97,7 @@ npm view opencode-context-relay-chatgpt dist-tags
 For the current development release, `dev` should resolve to:
 
 ```text
-2026.1.0-dev.7
+2026.1.0-dev.8
 ```
 
 `latest` is reserved for stable releases.
@@ -117,17 +117,17 @@ For the current development release, `dev` should resolve to:
 Pushing a version tag such as:
 
 ```sh
-git tag v2026.1.0-dev.7
-git push origin v2026.1.0-dev.7
+git tag v2026.1.0-dev.8
+git push origin v2026.1.0-dev.8
 ```
 
 triggers `.github/workflows/release-images.yml` and publishes:
 
 ```text
-ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:2026.1.0-dev.7
+ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:2026.1.0-dev.8
 ghcr.io/s3tupw1zard/opencode-context-relay-chatgpt:dev
 
-ghcr.io/s3tupw1zard/opencode-context-relay-migrator:2026.1.0-dev.7
+ghcr.io/s3tupw1zard/opencode-context-relay-migrator:2026.1.0-dev.8
 ghcr.io/s3tupw1zard/opencode-context-relay-migrator:dev
 ```
 
