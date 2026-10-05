@@ -1,16 +1,23 @@
 import { basename } from "node:path"
 import { classifyToolActivity, safeToolName, type ActivityCategory } from "./activity.js"
-import { configurationStatus, loadConfig, type BridgeConfig } from "./config.js"
+import { configurationStatus, hasUsableDatabaseUrl, loadConfig, type BridgeConfig } from "./config.js"
 import { createLogger } from "./logger.js"
 import { buildSnapshot, sanitizeSemanticContext, type SemanticContextInput } from "./context.js"
 import { readGitState, type GitState } from "./git.js"
 import { pathHintsFromToolInput } from "./privacy.js"
+import { ContextRelayRpc } from "./rpc.js"
+import {
+  createRelayStatus,
+  type RelayDatabaseStatus,
+  type RelayStatusSnapshot,
+} from "./status.js"
 import {
   checkPostgres,
   publishActivityEvent,
   publishRuntimeState,
   publishSnapshot,
   setPostgresLogger,
+  type ActivityEvent,
   type RuntimeStatus,
 } from "./postgres.js"
 
@@ -29,12 +36,29 @@ type RelayToolEditor = {
   }): unknown
 }
 
+type RelayRpcRegistration = {
+  events: {
+    emit(name: "status_changed", data: RelayStatusSnapshot): Promise<void>
+  }
+  dispose(): Promise<void>
+}
+
+type RelayRpcDomain = {
+  register(
+    definition: typeof ContextRelayRpc,
+    handlers: {
+      status(input: unknown): Promise<RelayStatusSnapshot>
+    },
+  ): Promise<RelayRpcRegistration>
+}
+
 type RelayPluginContext = {
   options?: Record<string, unknown>
   location: {
     directory: string
     project: { id: string }
   }
+  rpc: RelayRpcDomain
   session: {
     get(input: { sessionID: string }): Promise<unknown>
   }
@@ -162,6 +186,57 @@ const plugin = {
     const logger = createLogger(startupConfig)
     setPostgresLogger(logger)
 
+    let relayStatus = createRelayStatus(
+      hasUsableDatabaseUrl(startupConfig) ? "checking" : "unconfigured",
+    )
+    const relayStatusRegistration = await ctx.rpc.register(ContextRelayRpc, {
+      status: async () => relayStatus,
+    })
+
+    const updateRelayStatus = async (status: RelayDatabaseStatus) => {
+      if (relayStatus.status === status) return
+
+      const previous = relayStatus.status
+      relayStatus = createRelayStatus(status)
+      logger.info("relay database status changed", {
+        previous_status: previous,
+        status,
+      })
+
+      await relayStatusRegistration.events
+        .emit("status_changed", relayStatus)
+        .catch((error) => logger.warn("relay status event publish failed", { error }))
+    }
+
+    const refreshRelayStatus = async (
+      config: BridgeConfig,
+      reachableStatus: RelayDatabaseStatus = "connected",
+    ) => {
+      if (!hasUsableDatabaseUrl(config)) {
+        await updateRelayStatus("unconfigured")
+        return
+      }
+
+      const health = await checkPostgres(config)
+      if (health.storage === "unavailable") {
+        await updateRelayStatus("unavailable")
+        return
+      }
+      if (health.storage === "reachable" && health.schema === "missing") {
+        await updateRelayStatus("schema_missing")
+        return
+      }
+      if (health.storage === "reachable") {
+        await updateRelayStatus(reachableStatus)
+      }
+    }
+
+    const markPublishFailure = (config: BridgeConfig) => {
+      void refreshRelayStatus(config, "publish_failed").catch((error) => {
+        logger.warn("relay status refresh failed after publish error", { error })
+      })
+    }
+
     logger.info("plugin initialized", {
       project_id: String(ctx.location.project.id),
       database_configured: startupConfig.databaseUrl ? !/REPLACE_ME/i.test(startupConfig.databaseUrl) : false,
@@ -176,21 +251,23 @@ const plugin = {
       logger.error("databaseUrl still contains the REPLACE_ME placeholder; publishing is disabled")
     } else if (!startupConfig.databaseUrl) {
       logger.warn("PostgreSQL is not configured; set databaseUrl or BRIDGE_DATABASE_URL")
-    } else {
-      void checkPostgres(startupConfig).then((health) => {
-        if (health.storage === "unavailable") {
+    }
+
+    void refreshRelayStatus(startupConfig)
+      .then(() => {
+        if (relayStatus.status === "unavailable") {
           logger.error("PostgreSQL is unavailable during startup check")
-        } else if (health.storage === "reachable" && health.schema === "missing") {
+        } else if (relayStatus.status === "schema_missing") {
           logger.warn("PostgreSQL is reachable but the context schema is missing", {
             schema: startupConfig.databaseSchema,
           })
-        } else if (health.storage === "reachable") {
+        } else if (relayStatus.status === "connected") {
           logger.info("PostgreSQL startup check succeeded", {
             schema: startupConfig.databaseSchema,
           })
         }
       })
-    }
+      .catch((error) => logger.error("PostgreSQL startup check failed", { error }))
 
     const scopeForSession = async (sessionID: string): Promise<SessionScope> => {
       let directory: string = ctx.location.directory
@@ -232,20 +309,39 @@ const plugin = {
       const git = await readGitState(scope.directory)
       const label = projectLabel(scope.config, git, scope.directory)
       knownProjectLabels.set(scope.projectID, label)
-      await publishRuntimeState(scope.config, {
-        project_id: scope.projectID,
-        project_label: label,
-        session_id: sessionID,
-        repository: git.repository,
-        branch: git.branch,
-        head_commit: git.headCommit,
-        git_dirty: git.dirty,
-        changed_files: git.changedFiles,
-        git_stats: git.stats,
-        status,
-        current_action: action ?? currentAction.get(sessionID),
-        updated_at: new Date().toISOString(),
-      })
+      try {
+        const published = await publishRuntimeState(scope.config, {
+          project_id: scope.projectID,
+          project_label: label,
+          session_id: sessionID,
+          repository: git.repository,
+          branch: git.branch,
+          head_commit: git.headCommit,
+          git_dirty: git.dirty,
+          changed_files: git.changedFiles,
+          git_stats: git.stats,
+          status,
+          current_action: action ?? currentAction.get(sessionID),
+          updated_at: new Date().toISOString(),
+        })
+        if (published) await updateRelayStatus("connected")
+      } catch (error) {
+        markPublishFailure(scope.config)
+        throw error
+      }
+    }
+
+    const activityPublish = async (
+      scope: SessionScope,
+      event: ActivityEvent,
+    ) => {
+      try {
+        const published = await publishActivityEvent(scope.config, event)
+        if (published) await updateRelayStatus("connected")
+      } catch (error) {
+        markPublishFailure(scope.config)
+        throw error
+      }
     }
 
     await ctx.tool.transform((editor: RelayToolEditor) => {
@@ -340,6 +436,7 @@ const plugin = {
           try {
             published = await publishSnapshot(scope.config, snapshot)
           } catch (error) {
+            markPublishFailure(scope.config)
             logger.error("context snapshot publish failed", {
               project_id: scope.projectID,
               session_id: toolContext.sessionID,
@@ -351,6 +448,7 @@ const plugin = {
           }
 
           if (published) {
+            await updateRelayStatus("connected")
             const action = semantic.current_task ??
               (semantic.status === "idle" ? "OpenCode is idle" : "Context published")
             currentAction.set(toolContext.sessionID, action)
@@ -367,7 +465,10 @@ const plugin = {
               status: semantic.status,
               current_action: action,
               updated_at: new Date().toISOString(),
+            }).then((runtimePublished) => {
+              if (runtimePublished) return updateRelayStatus("connected")
             }).catch((error) => {
+              markPublishFailure(scope.config)
               logger.warn("runtime state publish failed after context snapshot publish", {
                 project_id: scope.projectID,
                 session_id: toolContext.sessionID,
@@ -438,7 +539,7 @@ const plugin = {
       const duration = tracked ? Math.min(Math.max(Date.now() - tracked.startedAt, 0), 24 * 60 * 60 * 1000) : undefined
 
       currentAction.set(sessionID, failed ? `${tool} failed` : `${tool} completed`)
-      await publishActivityEvent(scope.config, {
+      await activityPublish(scope, {
         project_id: scope.projectID,
         project_label: labelForScope(scope),
         session_id: sessionID,
@@ -466,7 +567,7 @@ const plugin = {
           if (type === "session.error") {
             currentAction.set(sessionID, "OpenCode session error")
             await runtimePublish(sessionID, "blocked", "OpenCode session error").catch((error) => logger.warn("background bridge publish failed", { error }))
-            await publishActivityEvent(scope.config, {
+            await activityPublish(scope, {
               project_id: scope.projectID,
               project_label: labelForScope(scope),
               session_id: sessionID,
@@ -479,7 +580,7 @@ const plugin = {
           }
 
           if (type === "session.compacted") {
-            await publishActivityEvent(scope.config, {
+            await activityPublish(scope, {
               project_id: scope.projectID,
               project_label: labelForScope(scope),
               session_id: sessionID,
@@ -495,7 +596,7 @@ const plugin = {
 
           currentAction.set(sessionID, "OpenCode is idle")
           await runtimePublish(sessionID, "idle", "OpenCode is idle").catch((error) => logger.warn("background bridge publish failed", { error }))
-          await publishActivityEvent(scope.config, {
+          await activityPublish(scope, {
             project_id: scope.projectID,
             project_label: labelForScope(scope),
             session_id: sessionID,
@@ -511,9 +612,13 @@ const plugin = {
       }
     })()
 
-    return () => {
+    return async () => {
       logger.info("plugin stopping")
       controller.abort()
+      await relayStatusRegistration
+        .dispose()
+        .catch((error) => logger.warn("relay status RPC disposal failed", { error }))
+      await logger.flush()
     }
   },
 }
