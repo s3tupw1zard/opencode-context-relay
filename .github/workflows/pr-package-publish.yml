@@ -132,4 +132,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.authorize.outputs.pr_number }}
-        run: npm publish "package/${{ matrix.id }}.tgz" --ignore-scripts --registry=https://npm.pkg.github.com --tag "pr-${PR_NUMBER}"
+        run: npm publish "./package/${{ matrix.id }}.tgz" --ignore-scripts --registry=https://npm.pkg.github.com --tag "pr-${PR_NUMBER}"
